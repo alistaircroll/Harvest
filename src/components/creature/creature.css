@@ -45,6 +45,11 @@
     object-fit: contain;
 }
 
+/* Mirror image for right-side limbs */
+.body-part-card__image--mirrored {
+    transform: scaleX(-1);
+}
+
 /* Compact cards with images */
 .body-part-card--compact .body-part-card__image-container {
     width: 48px;

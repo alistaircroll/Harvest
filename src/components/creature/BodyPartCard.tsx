@@ -44,6 +44,7 @@ interface BodyPartCardProps {
     onClick?: () => void;
     compact?: boolean;
     showImage?: boolean; // Whether to display artwork
+    mirrorImage?: boolean; // Flip image horizontally (for right-side limbs)
 }
 
 /**
@@ -58,6 +59,7 @@ export function BodyPartCard({
     onClick,
     compact = false,
     showImage = true,
+    mirrorImage = false,
 }: BodyPartCardProps) {
     // Future/locked slot
     if (isFuture) {
@@ -105,7 +107,7 @@ export function BodyPartCard({
                     <img
                         src={imageUrl}
                         alt={`${part.animalType} ${part.partType}`}
-                        className="body-part-card__image"
+                        className={`body-part-card__image ${mirrorImage ? 'body-part-card__image--mirrored' : ''}`}
                     />
                 </div>
             )}

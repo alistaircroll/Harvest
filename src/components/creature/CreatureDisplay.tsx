@@ -137,6 +137,7 @@ export function CreatureDisplay({
                         isInteractive={isInteractive}
                         onClick={() => handleSlotClick('rightArm1')}
                         compact
+                        mirrorImage
                     />
                 </div>
 
@@ -173,6 +174,7 @@ export function CreatureDisplay({
                             isInteractive={isInteractive}
                             onClick={() => handleSlotClick('rightLeg1')}
                             compact
+                            mirrorImage
                         />
                     </div>
                 ) : (
@@ -207,6 +209,7 @@ export function CreatureDisplay({
                                 isInteractive={isInteractive}
                                 onClick={() => handleSlotClick('rightLeg1')}
                                 compact
+                                mirrorImage
                             />
                         </div>
                         <div className="creature-display__slot creature-display__slot--right-leg-2">

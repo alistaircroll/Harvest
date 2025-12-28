@@ -8,9 +8,12 @@
  * SECURITY: Never hardcode API keys. All values come from environment.
  */
 
-import { initializeApp, FirebaseApp } from 'firebase/app';
-import { getFirestore, Firestore } from 'firebase/firestore';
-import { getAuth, Auth } from 'firebase/auth';
+import { initializeApp } from 'firebase/app';
+import type { FirebaseApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import type { Firestore } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+import type { Auth } from 'firebase/auth';
 
 // Firebase configuration from environment variables
 // Vite exposes env vars prefixed with VITE_ to the client

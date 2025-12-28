@@ -2,12 +2,38 @@
  * BodyPartCard Component
  * 
  * Displays a single body part with its stats and attacks.
- * Used in creature display, parts drawer, and freezer.
+ * Shows artwork when available, falls back to text display.
  */
 
-import type { BodyPart, Attack } from '../../types';
+import type { BodyPart, Attack, PartType, AnimalType } from '../../types';
 import { getAnimalDisplayName } from '../../utils/creatures';
 import './creature.css';
+
+// Import body part images
+// Vite handles these as URL imports
+const bodyPartImages: Partial<Record<`${AnimalType}-${PartType}`, string>> = {};
+
+// Dynamically import available images
+const imageModules = import.meta.glob<{ default: string }>(
+    '../../assets/body-parts/*.png',
+    { eager: true }
+);
+
+// Parse the imported modules into our lookup object
+for (const path of Object.keys(imageModules)) {
+    const filename = path.split('/').pop()?.replace('.png', '');
+    if (filename) {
+        bodyPartImages[filename as `${AnimalType}-${PartType}`] = imageModules[path].default;
+    }
+}
+
+/**
+ * Get the image URL for a body part if available
+ */
+function getBodyPartImage(animalType: AnimalType, partType: PartType): string | null {
+    const key = `${animalType}-${partType}` as `${AnimalType}-${PartType}`;
+    return bodyPartImages[key] || null;
+}
 
 interface BodyPartCardProps {
     part: BodyPart | null;
@@ -17,6 +43,7 @@ interface BodyPartCardProps {
     isFuture?: boolean;  // Locked future slot
     onClick?: () => void;
     compact?: boolean;
+    showImage?: boolean; // Whether to display artwork
 }
 
 /**
@@ -30,6 +57,7 @@ export function BodyPartCard({
     isFuture = false,
     onClick,
     compact = false,
+    showImage = true,
 }: BodyPartCardProps) {
     // Future/locked slot
     if (isFuture) {
@@ -62,14 +90,26 @@ export function BodyPartCard({
     }
 
     const hasHp = 'hpBonus' in part && part.hpBonus;
+    const imageUrl = showImage ? getBodyPartImage(part.animalType, part.partType) : null;
 
     return (
         <div
-            className={`body-part-card ${isSelected ? 'body-part-card--selected' : ''} ${compact ? 'body-part-card--compact' : ''}`}
+            className={`body-part-card ${isSelected ? 'body-part-card--selected' : ''} ${compact ? 'body-part-card--compact' : ''} ${imageUrl ? 'body-part-card--has-image' : ''}`}
             onClick={isInteractive ? onClick : undefined}
             role={isInteractive ? 'button' : undefined}
             tabIndex={isInteractive ? 0 : undefined}
         >
+            {/* Body Part Image */}
+            {imageUrl && (
+                <div className="body-part-card__image-container">
+                    <img
+                        src={imageUrl}
+                        alt={`${part.animalType} ${part.partType}`}
+                        className="body-part-card__image"
+                    />
+                </div>
+            )}
+
             {/* Header: Animal name + Part type */}
             <div className="body-part-card__header">
                 <span className="body-part-card__animal">

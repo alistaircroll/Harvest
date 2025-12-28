@@ -1,16 +1,17 @@
 /**
  * BodyPartCard Component
  * 
- * Displays a single body part with its stats and attacks.
- * Shows artwork when available, falls back to text display.
+ * Card displaying a body part with stats and attacks.
+ * Used both in creature display and selection interfaces.
+ * Supports drag-and-drop for freezer part swapping.
  */
 
-import type { BodyPart, Attack, PartType, AnimalType } from '../../types';
+import { useState } from 'react';
+import type { BodyPart, Attack, PartType, AnimalType, MVPPartSlot } from '../../types';
 import { getAnimalDisplayName } from '../../utils/creatures';
 import './creature.css';
 
-// Import body part images
-// Vite handles these as URL imports
+// Import body part images dynamicallyte handles these as URL imports
 const bodyPartImages: Partial<Record<`${AnimalType}-${PartType}`, string>> = {};
 
 // Dynamically import available images
@@ -38,11 +39,15 @@ function getBodyPartImage(animalType: AnimalType, partType: PartType): string | 
 interface BodyPartCardProps {
     part: BodyPart | null;
     slotType?: string;
+    slotPartType?: PartType; // The part type this slot accepts (for drop validation)
+    creatureSlot?: MVPPartSlot; // The creature slot this card represents (for drag data)
     isSelected?: boolean;
     isInteractive?: boolean;
+    isDraggable?: boolean; // Whether this part can be dragged to freezer
     isFuture?: boolean;  // Locked future slot
     isHighlighted?: boolean; // Has frozen alternatives
     onClick?: () => void;
+    onDrop?: (droppedPart: BodyPart, freezerIndex: number) => void; // Called when a part is dropped here
     compact?: boolean;
     showImage?: boolean; // Whether to display artwork
     mirrorImage?: boolean; // Flip image horizontally (for right-side limbs)
@@ -54,15 +59,89 @@ interface BodyPartCardProps {
 export function BodyPartCard({
     part,
     slotType,
+    slotPartType,
+    creatureSlot,
     isSelected = false,
     isInteractive = true,
+    isDraggable = false,
     isFuture = false,
     isHighlighted = false,
     onClick,
+    onDrop,
     compact = false,
     showImage = true,
     mirrorImage = false,
 }: BodyPartCardProps) {
+    const [isDragOver, setIsDragOver] = useState(false);
+    const [isValidDrop, setIsValidDrop] = useState(false);
+
+    // Handle drag start for creature-to-freezer drag
+    const handleDragStart = (e: React.DragEvent) => {
+        if (!isDraggable || !part || !creatureSlot) return;
+        e.dataTransfer.setData('application/json', JSON.stringify({
+            source: 'creature',
+            creatureSlot: creatureSlot,
+            partType: part.partType,
+            part: part,
+        }));
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    // Handle drag over - check compatibility
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        if (!onDrop || !slotPartType) return;
+
+        try {
+            // Check if the dragged part is compatible
+            const data = e.dataTransfer.types.includes('application/json');
+            if (data) {
+                setIsDragOver(true);
+                // We can't read the data during dragover, so we allow it
+                // and validate on drop
+                e.dataTransfer.dropEffect = 'move';
+            }
+        } catch {
+            // Ignore errors
+        }
+    };
+
+    const handleDragEnter = (e: React.DragEvent) => {
+        e.preventDefault();
+        if (!onDrop) return;
+        setIsDragOver(true);
+        // Try to read data type from types array for validation hint
+        // This is a hint only; actual validation happens on drop
+        setIsValidDrop(true); // Assume valid, validate on drop
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(false);
+        setIsValidDrop(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(false);
+        setIsValidDrop(false);
+
+        if (!onDrop || !slotPartType) return;
+
+        try {
+            const data = JSON.parse(e.dataTransfer.getData('application/json'));
+            const droppedPartType = data.partType as PartType;
+
+            // Check compatibility
+            const isCompatible = droppedPartType === slotPartType;
+
+            if (isCompatible && data.part) {
+                onDrop(data.part as BodyPart, data.freezerIndex);
+            }
+        } catch {
+            // Invalid drop data
+        }
+    };
     // Future/locked slot
     if (isFuture) {
         return (
@@ -98,10 +177,16 @@ export function BodyPartCard({
 
     return (
         <div
-            className={`body-part-card ${isSelected ? 'body-part-card--selected' : ''} ${compact ? 'body-part-card--compact' : ''} ${imageUrl ? 'body-part-card--has-image' : ''} ${isHighlighted ? 'body-part-card--highlighted' : ''}`}
+            className={`body-part-card ${isSelected ? 'body-part-card--selected' : ''} ${compact ? 'body-part-card--compact' : ''} ${imageUrl ? 'body-part-card--has-image' : ''} ${isHighlighted ? 'body-part-card--highlighted' : ''} ${isDragOver ? 'body-part-card--drag-over' : ''} ${isDragOver && isValidDrop ? 'body-part-card--drop-valid' : ''} ${isDraggable ? 'body-part-card--draggable' : ''}`}
             onClick={isInteractive ? onClick : undefined}
             role={isInteractive ? 'button' : undefined}
             tabIndex={isInteractive ? 0 : undefined}
+            draggable={isDraggable && !!part}
+            onDragStart={isDraggable ? handleDragStart : undefined}
+            onDragOver={onDrop ? handleDragOver : undefined}
+            onDragEnter={onDrop ? handleDragEnter : undefined}
+            onDragLeave={onDrop ? handleDragLeave : undefined}
+            onDrop={onDrop ? handleDrop : undefined}
         >
             {/* Body Part Image */}
             {imageUrl && (

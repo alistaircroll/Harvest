@@ -6,7 +6,7 @@
  * MVP mode shows simplified layout with position-1 limbs only.
  */
 
-import type { PlayerCreature, PartSlot } from '../../types';
+import type { PlayerCreature, PartSlot, BodyPart, PartType } from '../../types';
 import { BodyPartCard } from './BodyPartCard';
 import { getCreatureAttacks } from '../../utils/creatures';
 import './creature.css';
@@ -15,10 +15,22 @@ interface CreatureDisplayProps {
     creature: PlayerCreature;
     selectedSlot?: PartSlot | null;
     onSlotClick?: (slot: PartSlot) => void;
+    onPartDrop?: (slot: PartSlot, droppedPart: BodyPart, freezerIndex: number) => void;
     isInteractive?: boolean;
+    isDraggable?: boolean; // Whether creature parts can be dragged to freezer
     showStats?: boolean;
-    showFutureSlots?: boolean; // Show locked future slots
-    highlightedSlots?: Set<PartSlot>; // Slots with frozen alternatives
+    showFutureSlots?: boolean;
+    highlightedSlots?: Set<PartSlot>;
+}
+
+// Map slot to its compatible PartType
+function getSlotPartType(slot: PartSlot): PartType {
+    if (slot === 'head') return 'head';
+    if (slot === 'torso') return 'torso';
+    if (slot === 'tail') return 'tail';
+    if (slot.includes('Arm') || slot.includes('Antenna') || slot.includes('Wing')) return 'arm';
+    if (slot.includes('Leg')) return 'leg';
+    return 'torso';
 }
 
 /**
@@ -28,7 +40,9 @@ export function CreatureDisplay({
     creature,
     selectedSlot = null,
     onSlotClick,
+    onPartDrop,
     isInteractive = true,
+    isDraggable = false,
     showStats = true,
     showFutureSlots = false,
     highlightedSlots,
@@ -40,6 +54,17 @@ export function CreatureDisplay({
         if (isInteractive && onSlotClick) {
             onSlotClick(slot);
         }
+    };
+
+    // Helper to create drop handler for a slot
+    const createDropHandler = (slot: PartSlot) => {
+        if (!onPartDrop) return undefined;
+        const slotType = getSlotPartType(slot);
+        return (droppedPart: BodyPart, freezerIndex: number) => {
+            if (droppedPart.partType === slotType) {
+                onPartDrop(slot, droppedPart, freezerIndex);
+            }
+        };
     };
 
     return (
@@ -78,10 +103,14 @@ export function CreatureDisplay({
                     <BodyPartCard
                         part={slots.head}
                         slotType="Head"
+                        slotPartType="head"
+                        creatureSlot="head"
                         isSelected={selectedSlot === 'head'}
                         isInteractive={isInteractive && highlightedSlots?.has('head')}
                         isHighlighted={highlightedSlots?.has('head')}
+                        isDraggable={isDraggable}
                         onClick={() => handleSlotClick('head')}
+                        onDrop={createDropHandler('head')}
                     />
                 </div>
 
@@ -113,10 +142,14 @@ export function CreatureDisplay({
                     <BodyPartCard
                         part={slots.leftArm1}
                         slotType="L.Arm"
+                        slotPartType="arm"
+                        creatureSlot="leftArm1"
                         isSelected={selectedSlot === 'leftArm1'}
                         isInteractive={isInteractive && highlightedSlots?.has('leftArm1')}
                         isHighlighted={highlightedSlots?.has('leftArm1')}
+                        isDraggable={isDraggable}
                         onClick={() => handleSlotClick('leftArm1')}
+                        onDrop={createDropHandler('leftArm1')}
                         compact
                     />
                 </div>
@@ -137,10 +170,14 @@ export function CreatureDisplay({
                     <BodyPartCard
                         part={slots.rightArm1}
                         slotType="R.Arm"
+                        slotPartType="arm"
+                        creatureSlot="rightArm1"
                         isSelected={selectedSlot === 'rightArm1'}
                         isInteractive={isInteractive && highlightedSlots?.has('rightArm1')}
                         isHighlighted={highlightedSlots?.has('rightArm1')}
+                        isDraggable={isDraggable}
                         onClick={() => handleSlotClick('rightArm1')}
+                        onDrop={createDropHandler('rightArm1')}
                         compact
                         mirrorImage
                     />
@@ -167,19 +204,27 @@ export function CreatureDisplay({
                         <BodyPartCard
                             part={slots.leftLeg1}
                             slotType="L.Leg"
+                            slotPartType="leg"
+                            creatureSlot="leftLeg1"
                             isSelected={selectedSlot === 'leftLeg1'}
                             isInteractive={isInteractive && highlightedSlots?.has('leftLeg1')}
                             isHighlighted={highlightedSlots?.has('leftLeg1')}
+                            isDraggable={isDraggable}
                             onClick={() => handleSlotClick('leftLeg1')}
+                            onDrop={createDropHandler('leftLeg1')}
                             compact
                         />
                         <BodyPartCard
                             part={slots.rightLeg1}
                             slotType="R.Leg"
+                            slotPartType="leg"
+                            creatureSlot="rightLeg1"
                             isSelected={selectedSlot === 'rightLeg1'}
                             isInteractive={isInteractive && highlightedSlots?.has('rightLeg1')}
                             isHighlighted={highlightedSlots?.has('rightLeg1')}
+                            isDraggable={isDraggable}
                             onClick={() => handleSlotClick('rightLeg1')}
+                            onDrop={createDropHandler('rightLeg1')}
                             compact
                             mirrorImage
                         />
@@ -236,10 +281,14 @@ export function CreatureDisplay({
                     <BodyPartCard
                         part={slots.tail}
                         slotType="Tail"
+                        slotPartType="tail"
+                        creatureSlot="tail"
                         isSelected={selectedSlot === 'tail'}
                         isInteractive={isInteractive && highlightedSlots?.has('tail')}
                         isHighlighted={highlightedSlots?.has('tail')}
+                        isDraggable={isDraggable}
                         onClick={() => handleSlotClick('tail')}
+                        onDrop={createDropHandler('tail')}
                         compact
                     />
                 </div>

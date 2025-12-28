@@ -2,16 +2,13 @@
  * Laboratory Screen
  * 
  * Main hub for creature customization and management.
- * Slots with frozen alternatives show arrows for swapping.
- * Slots with no alternatives are not interactive.
+ * Bidirectional drag-and-drop between creature and freezer.
  */
 
-import { useState } from 'react';
-import type { MVPPartSlot, BodyPart } from '../../types';
+import { useState, useCallback } from 'react';
+import type { MVPPartSlot, BodyPart, PartSlot } from '../../types';
 import { CreatureDisplay } from '../creature/CreatureDisplay';
-import { PartCarousel } from './PartCarousel';
 import { FreezerPanel } from './FreezerPanel';
-import { getSlotDisplayName } from '../../utils/creatures';
 import './laboratory.css';
 
 interface LaboratoryProps {
@@ -19,65 +16,67 @@ interface LaboratoryProps {
     creature: ReturnType<typeof import('../../hooks/useCreature').useCreature>['creature'];
     /** Freezer contents */
     freezer: ReturnType<typeof import('../../hooks/useCreature').useCreature>['freezer'];
-    /** Get available parts for a slot */
-    availablePartsForSlot: (slot: MVPPartSlot) => BodyPart[];
-    /** Check if a slot has alternatives in the freezer */
-    hasAlternatives: (slot: MVPPartSlot) => boolean;
-    /** Swap a body part */
-    onSwapPart: (slot: MVPPartSlot, part: BodyPart) => void;
+    /** Swap a body part - swaps creature slot with freezer slot */
+    onSwapPart: (slot: MVPPartSlot, newPart: BodyPart, freezerIndex: number) => void;
+    /** Move creature part to freezer (may leave slot empty) */
+    onMoveToFreezer: (slot: MVPPartSlot, freezerIndex: number) => void;
+    /** Empty a freezer slot */
+    onEmptySlot: (freezerIndex: number) => void;
     /** Called when user wants to go walking */
     onGoWalking: () => void;
+    /** Called when user confirms new game */
+    onNewGame: () => void;
 }
+
+// MVP slots that support swapping
+const MVP_SLOTS: Set<PartSlot> = new Set(['head', 'torso', 'leftArm1', 'rightArm1', 'leftLeg1', 'rightLeg1', 'tail']);
 
 export function Laboratory({
     creature,
     freezer,
-    availablePartsForSlot,
-    hasAlternatives,
     onSwapPart,
-    onGoWalking
+    onMoveToFreezer,
+    onEmptySlot,
+    onGoWalking,
+    onNewGame,
 }: LaboratoryProps) {
-    // Track which slot is being edited
-    const [editingSlot, setEditingSlot] = useState<MVPPartSlot | null>(null);
+    // Track confirming state for New Game
+    const [confirmingNewGame, setConfirmingNewGame] = useState(false);
 
-    // Get current part in slot being edited
-    const currentPart = editingSlot
-        ? creature.slots[editingSlot as keyof typeof creature.slots] as BodyPart | null
-        : null;
-
-    // Get available parts for the slot being edited
-    const availableParts = editingSlot
-        ? availablePartsForSlot(editingSlot)
-        : [];
-
-    // Handle slot click - only open carousel if slot has alternatives
-    const handleSlotClick = (slot: MVPPartSlot) => {
-        if (hasAlternatives(slot)) {
-            setEditingSlot(slot);
+    // Handle drop on creature slot (from freezer)
+    const handleCreatureDrop = useCallback((slot: PartSlot, droppedPart: BodyPart, freezerIndex: number) => {
+        if (MVP_SLOTS.has(slot)) {
+            onSwapPart(slot as MVPPartSlot, droppedPart, freezerIndex);
         }
-    };
+    }, [onSwapPart]);
 
-    // Handle carousel lock-in
-    const handleSelectPart = (part: BodyPart) => {
-        if (editingSlot) {
-            onSwapPart(editingSlot, part);
-            setEditingSlot(null);
+    // Handle drop on freezer slot (from creature)
+    const handleFreezerDrop = useCallback((freezerIndex: number, creatureSlot: MVPPartSlot, _creaturePart: BodyPart) => {
+        // If freezer slot has a part, swap; otherwise just move creature part to freezer
+        const freezerPart = freezer[freezerIndex];
+        if (freezerPart) {
+            // Swap: creature part goes to freezer, freezer part goes to creature
+            onSwapPart(creatureSlot, freezerPart, freezerIndex);
+        } else {
+            // Move: creature part goes to empty freezer slot
+            onMoveToFreezer(creatureSlot, freezerIndex);
         }
-    };
+    }, [freezer, onSwapPart, onMoveToFreezer]);
 
-    // Handle carousel cancel
-    const handleCancelCarousel = () => {
-        setEditingSlot(null);
-    };
-
-    // Determine which slots have alternatives (for visual indicator)
-    const slotsWithAlternatives = new Set<MVPPartSlot>();
-    const mvpSlots: MVPPartSlot[] = ['head', 'torso', 'leftArm1', 'rightArm1', 'leftLeg1', 'rightLeg1', 'tail'];
-    for (const slot of mvpSlots) {
-        if (hasAlternatives(slot)) {
-            slotsWithAlternatives.add(slot);
+    // Handle New Game button click
+    const handleNewGameClick = useCallback(() => {
+        if (confirmingNewGame) {
+            onNewGame();
+            setConfirmingNewGame(false);
+        } else {
+            setConfirmingNewGame(true);
+            // Auto-cancel after 3 seconds
+            setTimeout(() => setConfirmingNewGame(false), 3000);
         }
-    }
+    }, [confirmingNewGame, onNewGame]);
+
+    // Count frozen parts for UI hint
+    const frozenCount = freezer.filter(p => p !== null).length;
 
     return (
         <div className="laboratory">
@@ -85,32 +84,29 @@ export function Laboratory({
             <header className="laboratory__header">
                 <h1 className="laboratory__title">🧪 Creature Lab</h1>
                 <p className="laboratory__subtitle">
-                    {slotsWithAlternatives.size > 0
-                        ? 'Tap highlighted parts to swap from freezer'
+                    {frozenCount > 0
+                        ? 'Drag parts between creature and freezer'
                         : 'Collect parts from battles to customize'
                     }
                 </p>
             </header>
 
-            {/* Creature Display */}
+            {/* Creature Display with draggable parts */}
             <section className="laboratory__creature">
                 <CreatureDisplay
                     creature={creature}
-                    selectedSlot={editingSlot}
-                    onSlotClick={(slot) => handleSlotClick(slot as MVPPartSlot)}
-                    isInteractive={true}
+                    isInteractive={false}
                     showStats={true}
-                    highlightedSlots={slotsWithAlternatives}
+                    onPartDrop={handleCreatureDrop}
+                    isDraggable={true}
                 />
-                {slotsWithAlternatives.size > 0 && (
-                    <p className="laboratory__hint">← → to browse • Enter to lock in</p>
-                )}
             </section>
 
-            {/* Freezer Panel */}
+            {/* Freezer Panel with drop targets */}
             <FreezerPanel
                 freezer={freezer}
-                canDefrost={false}
+                onEmptySlot={onEmptySlot}
+                onCreaturePartDrop={handleFreezerDrop}
             />
 
             {/* Actions */}
@@ -123,16 +119,15 @@ export function Laboratory({
                 </button>
             </section>
 
-            {/* Part Carousel Modal - only shows if there are alternatives */}
-            {editingSlot && availableParts.length > 1 && (
-                <PartCarousel
-                    parts={availableParts}
-                    currentPart={currentPart}
-                    slotName={getSlotDisplayName(editingSlot)}
-                    onSelect={handleSelectPart}
-                    onCancel={handleCancelCarousel}
-                />
-            )}
+            {/* New Game Button */}
+            <section className="laboratory__footer">
+                <button
+                    className={`btn btn--ghost btn--small ${confirmingNewGame ? 'btn--danger' : ''}`}
+                    onClick={handleNewGameClick}
+                >
+                    {confirmingNewGame ? '⚠️ Confirm Restart?' : 'New Game'}
+                </button>
+            </section>
         </div>
     );
 }

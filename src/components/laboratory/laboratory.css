@@ -56,6 +56,35 @@
     justify-content: center;
 }
 
+.laboratory__footer {
+    display: flex;
+    justify-content: center;
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--color-border-subtle);
+}
+
+.btn--ghost {
+    background: transparent;
+    border: 1px solid var(--color-border-subtle);
+    color: var(--color-dusty-taupe);
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--font-size-xs);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn--ghost:hover {
+    border-color: var(--color-dusty-taupe);
+    color: var(--color-text-secondary);
+}
+
+.btn--danger {
+    background: var(--color-cherry-rose);
+    border-color: var(--color-cherry-rose);
+    color: white;
+    animation: confirmPulse 0.5s ease-in-out infinite;
+}
+
 /* ================================
    Part Carousel Modal
    ================================ */
@@ -454,4 +483,81 @@
 
 .freezer-slot--empty .freezer-slot__label {
     opacity: 0.5;
+}
+
+/* Draggable frozen slots */
+.freezer-slot--filled {
+    cursor: grab;
+}
+
+.freezer-slot--filled:active {
+    cursor: grabbing;
+}
+
+.freezer-slot--filled:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(100, 200, 255, 0.2);
+}
+
+/* Drop target state */
+.freezer-slot--drag-over {
+    border-color: var(--color-honeydew);
+    background: rgba(223, 248, 235, 0.15);
+    transform: scale(1.05);
+}
+
+/* Hint text */
+.freezer-panel__hint {
+    font-family: var(--font-sans);
+    font-size: var(--font-size-xs);
+    color: var(--color-dusty-taupe);
+}
+
+/* Empty button */
+.freezer-slot__empty-btn {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    padding: 2px 6px;
+    font-family: var(--font-sans);
+    font-size: 9px;
+    background: rgba(0, 0, 0, 0.6);
+    color: var(--color-dusty-taupe);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    z-index: 10;
+}
+
+.freezer-slot__empty-btn:hover {
+    background: rgba(0, 0, 0, 0.8);
+    color: var(--color-text-secondary);
+}
+
+/* Two-step confirmation state */
+.freezer-slot__empty-btn--confirm {
+    background: var(--color-cherry-rose);
+    color: white;
+    border-color: var(--color-cherry-rose);
+    animation: confirmPulse 0.5s ease-in-out infinite;
+}
+
+@keyframes confirmPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Cancel overlay */
+.freezer-panel__cancel-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 5;
 }

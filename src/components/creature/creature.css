@@ -155,6 +155,40 @@
     }
 }
 
+/* Drag and drop states */
+.body-part-card--drag-over {
+    border-color: var(--color-honeydew);
+    background: rgba(223, 248, 235, 0.1);
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(223, 248, 235, 0.4);
+}
+
+.body-part-card--drop-valid {
+    border-color: var(--color-honeydew);
+    animation: dropPulse 0.5s ease-in-out infinite;
+}
+
+@keyframes dropPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 10px rgba(223, 248, 235, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(223, 248, 235, 0.6);
+    }
+}
+
+/* Draggable body parts */
+.body-part-card--draggable {
+    cursor: grab;
+}
+
+.body-part-card--draggable:active {
+    cursor: grabbing;
+}
+
 /* Future/locked slots */
 .body-part-card--future {
     background: rgba(29, 30, 44, 0.3);

@@ -2,10 +2,13 @@
  * FreezerPanel Component
  * 
  * Displays 3 backup part slots with icy styling.
- * Shows stored parts or empty ice cube placeholders.
+ * Parts are DRAGGABLE to creature slots.
+ * Slots are DROP TARGETS for creature parts.
+ * Includes "Empty" button with two-step confirmation.
  */
 
-import type { BodyPart, AnimalType, PartType } from '../../types';
+import { useState } from 'react';
+import type { BodyPart, AnimalType, PartType, MVPPartSlot } from '../../types';
 import { getAnimalDisplayName, getPartTypeDisplayName } from '../../utils/creatures';
 import './laboratory.css';
 
@@ -31,33 +34,110 @@ function getBodyPartImage(animalType: AnimalType, partType: PartType): string | 
 interface FreezerPanelProps {
     /** Freezer slots (3 slots, can be null) */
     freezer: (BodyPart | null)[];
-    /** Called when a frozen part is clicked */
-    onPartClick?: (index: number, part: BodyPart) => void;
-    /** Whether defrosting is allowed (typically after death) */
-    canDefrost?: boolean;
+    /** Called when a part starts being dragged from freezer */
+    onDragStart?: (index: number, part: BodyPart) => void;
+    /** Called when drag ends */
+    onDragEnd?: () => void;
+    /** Called to empty a freezer slot */
+    onEmptySlot?: (index: number) => void;
+    /** Called when a creature part is dropped onto a freezer slot */
+    onCreaturePartDrop?: (freezerIndex: number, creatureSlot: MVPPartSlot, creaturePart: BodyPart) => void;
 }
 
 export function FreezerPanel({
     freezer,
-    onPartClick,
-    canDefrost = false
+    onDragStart,
+    onDragEnd,
+    onEmptySlot,
+    onCreaturePartDrop,
 }: FreezerPanelProps) {
+    // Track which slot is in "confirm empty" mode
+    const [confirmingEmpty, setConfirmingEmpty] = useState<number | null>(null);
+    // Track slot being dragged over
+    const [dragOverSlot, setDragOverSlot] = useState<number | null>(null);
+
+    const handleDragStart = (e: React.DragEvent, index: number, part: BodyPart) => {
+        // Set drag data for freezer->creature drag
+        e.dataTransfer.setData('application/json', JSON.stringify({
+            source: 'freezer',
+            freezerIndex: index,
+            partType: part.partType,
+            part: part,
+        }));
+        e.dataTransfer.effectAllowed = 'move';
+        onDragStart?.(index, part);
+    };
+
+    const handleDragEnd = () => {
+        onDragEnd?.();
+        setDragOverSlot(null);
+    };
+
+    // Handle drop from creature onto freezer slot
+    const handleDrop = (e: React.DragEvent, freezerIndex: number) => {
+        e.preventDefault();
+        setDragOverSlot(null);
+
+        if (!onCreaturePartDrop) return;
+
+        try {
+            const data = JSON.parse(e.dataTransfer.getData('application/json'));
+            // Only accept drops from creature (not from other freezer slots)
+            if (data.source === 'creature' && data.creatureSlot && data.part) {
+                onCreaturePartDrop(freezerIndex, data.creatureSlot, data.part);
+            }
+        } catch {
+            // Invalid drop data
+        }
+    };
+
+    const handleDragOver = (e: React.DragEvent, index: number) => {
+        e.preventDefault();
+        setDragOverSlot(index);
+        e.dataTransfer.dropEffect = 'move';
+    };
+
+    const handleDragLeave = () => {
+        setDragOverSlot(null);
+    };
+
+    const handleEmptyClick = (index: number, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (confirmingEmpty === index) {
+            // Second click - confirm empty
+            onEmptySlot?.(index);
+            setConfirmingEmpty(null);
+        } else {
+            // First click - enter confirm mode
+            setConfirmingEmpty(index);
+            // Auto-cancel after 3 seconds
+            setTimeout(() => setConfirmingEmpty(null), 3000);
+        }
+    };
+
+    const handleCancelConfirm = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setConfirmingEmpty(null);
+    };
+
     return (
         <div className="freezer-panel">
             <div className="freezer-panel__header">
                 <span className="freezer-panel__title">❄️ Freezer</span>
-                <span className="freezer-panel__count">
-                    {freezer.filter(p => p !== null).length}/3
-                </span>
+                <span className="freezer-panel__hint">Drag parts to swap</span>
             </div>
 
             <div className="freezer-panel__slots">
                 {freezer.map((part, index) => (
-                    <button
+                    <div
                         key={index}
-                        className={`freezer-slot ${part ? 'freezer-slot--filled' : 'freezer-slot--empty'} ${canDefrost && part ? 'freezer-slot--can-defrost' : ''}`}
-                        onClick={() => part && onPartClick?.(index, part)}
-                        disabled={!part || (!canDefrost && !onPartClick)}
+                        className={`freezer-slot ${part ? 'freezer-slot--filled' : 'freezer-slot--empty'} ${dragOverSlot === index ? 'freezer-slot--drag-over' : ''}`}
+                        draggable={!!part}
+                        onDragStart={(e) => part && handleDragStart(e, index, part)}
+                        onDragEnd={handleDragEnd}
+                        onDrop={(e) => handleDrop(e, index)}
+                        onDragOver={(e) => handleDragOver(e, index)}
+                        onDragLeave={handleDragLeave}
                     >
                         {part ? (
                             <>
@@ -84,6 +164,17 @@ export function FreezerPanel({
                                 <span className="freezer-slot__label">
                                     {getPartTypeDisplayName(part.partType)}
                                 </span>
+
+                                {/* Empty button with two-step confirmation */}
+                                {onEmptySlot && (
+                                    <button
+                                        className={`freezer-slot__empty-btn ${confirmingEmpty === index ? 'freezer-slot__empty-btn--confirm' : ''}`}
+                                        onClick={(e) => handleEmptyClick(index, e)}
+                                        onBlur={() => setConfirmingEmpty(null)}
+                                    >
+                                        {confirmingEmpty === index ? '⚠️ Confirm' : '✕ Empty'}
+                                    </button>
+                                )}
                             </>
                         ) : (
                             <>
@@ -91,12 +182,20 @@ export function FreezerPanel({
                                 <div className="freezer-slot__ice-cube">
                                     <span>🧊</span>
                                 </div>
-                                <span className="freezer-slot__label">Empty</span>
+                                <span className="freezer-slot__label">Drop here</span>
                             </>
                         )}
-                    </button>
+                    </div>
                 ))}
             </div>
+
+            {/* Cancel confirm if clicked outside */}
+            {confirmingEmpty !== null && (
+                <div
+                    className="freezer-panel__cancel-overlay"
+                    onClick={handleCancelConfirm}
+                />
+            )}
         </div>
     );
 }

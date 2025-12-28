@@ -20,9 +20,10 @@ function App() {
   const {
     creature,
     freezer,
-    availablePartsForSlot,
-    hasAlternatives,
     swapPart,
+    moveToFreezer,
+    emptyFreezerSlot,
+    resetCreature,
     harvestPart,
     loseRandomPart,
     healCreature,
@@ -66,10 +67,27 @@ function App() {
     setScreen('combat');
   }, []);
 
-  // Handle swap part from laboratory
-  const handleSwapPart = useCallback((slot: MVPPartSlot, part: BodyPart) => {
-    swapPart(slot, part);
+  // Handle swap part from laboratory (drag-drop)
+  const handleSwapPart = useCallback((slot: MVPPartSlot, part: BodyPart, freezerIndex: number) => {
+    swapPart(slot, part, freezerIndex);
   }, [swapPart]);
+
+  // Handle move creature part to freezer
+  const handleMoveToFreezer = useCallback((slot: MVPPartSlot, freezerIndex: number) => {
+    moveToFreezer(slot, freezerIndex);
+  }, [moveToFreezer]);
+
+  // Handle empty freezer slot
+  const handleEmptySlot = useCallback((freezerIndex: number) => {
+    emptyFreezerSlot(freezerIndex);
+  }, [emptyFreezerSlot]);
+
+  // Handle new game
+  const handleNewGame = useCallback(() => {
+    resetCreature();
+    setPetName('');
+    setScreen('intro');
+  }, [resetCreature]);
 
   // Handle victory - harvest parts
   const handleVictory = useCallback((loot: WildCreature['lootTable']) => {
@@ -156,10 +174,11 @@ function App() {
       <Laboratory
         creature={creature}
         freezer={freezer}
-        availablePartsForSlot={availablePartsForSlot}
-        hasAlternatives={hasAlternatives}
         onSwapPart={handleSwapPart}
+        onMoveToFreezer={handleMoveToFreezer}
+        onEmptySlot={handleEmptySlot}
         onGoWalking={handleGoWalking}
+        onNewGame={handleNewGame}
       />
     </main>
   );

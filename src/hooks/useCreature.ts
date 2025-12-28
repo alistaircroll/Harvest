@@ -32,8 +32,14 @@ interface UseCreatureReturn {
     canFreeze: boolean;
 
     // Actions
-    /** Swap a part - old part goes to freezer, new part from freezer gets equipped */
-    swapPart: (slot: MVPPartSlot, newPart: BodyPart) => void;
+    /** Swap a part - old part goes to specified freezer slot, new part gets equipped */
+    swapPart: (slot: MVPPartSlot, newPart: BodyPart, freezerIndex: number) => void;
+    /** Move creature part to freezer slot (leaves slot empty) */
+    moveToFreezer: (slot: MVPPartSlot, freezerIndex: number) => void;
+    /** Empty a freezer slot permanently */
+    emptyFreezerSlot: (freezerIndex: number) => void;
+    /** Reset to new creature (for New Game) */
+    resetCreature: () => void;
     /** Add a part to an empty freezer slot */
     freezePart: (part: BodyPart) => boolean;
     /** Remove a part from the freezer */
@@ -112,8 +118,8 @@ export function useCreature(): UseCreatureReturn {
     // Can freeze more parts?
     const canFreeze = freezerSlotsUsed < MAX_FREEZER_SLOTS;
 
-    // Swap a body part - old part goes to freezer, new part gets equipped
-    const swapPart = useCallback((slot: MVPPartSlot, newPart: BodyPart) => {
+    // Swap a body part - old part goes to specified freezer slot, new part gets equipped
+    const swapPart = useCallback((slot: MVPPartSlot, newPart: BodyPart, freezerIndex: number) => {
         setCreature(prev => {
             const newSlots = { ...prev.slots } as CreatureSlots;
             const oldPart = newSlots[slot as keyof CreatureSlots];
@@ -146,19 +152,10 @@ export function useCreature(): UseCreatureReturn {
             // Recalculate stats
             const stats = calculateCreatureStats(newSlots);
 
-            // Move old part to freezer, remove new part from freezer
+            // Put old part in the specified freezer slot
             setFreezer(prevFreezer => {
                 const newFreezer = [...prevFreezer];
-
-                // Find and remove new part from freezer
-                const newPartIndex = newFreezer.findIndex(p =>
-                    p && p.animalType === newPart.animalType && p.partType === newPart.partType
-                );
-                if (newPartIndex >= 0) {
-                    // Put old part in the slot where new part was
-                    newFreezer[newPartIndex] = oldPart;
-                }
-
+                newFreezer[freezerIndex] = oldPart;
                 return newFreezer;
             });
 
@@ -170,6 +167,74 @@ export function useCreature(): UseCreatureReturn {
                 totalDefense: stats.totalDefense,
             };
         });
+    }, []);
+
+    // Empty a freezer slot permanently
+    const emptyFreezerSlot = useCallback((freezerIndex: number) => {
+        setFreezer(prev => {
+            const newFreezer = [...prev];
+            newFreezer[freezerIndex] = null;
+            return newFreezer;
+        });
+    }, []);
+
+    // Move creature part to freezer slot (leaves creature slot empty/null)
+    const moveToFreezer = useCallback((slot: MVPPartSlot, freezerIndex: number) => {
+        setCreature(prev => {
+            const newSlots = { ...prev.slots } as CreatureSlots;
+            const partToMove = newSlots[slot as keyof CreatureSlots];
+
+            if (!partToMove) return prev; // Nothing to move
+
+            // Set slot to null (creature loses this part)
+            switch (slot) {
+                case 'head':
+                    newSlots.head = null as unknown as typeof newSlots.head;
+                    break;
+                case 'leftArm1':
+                    newSlots.leftArm1 = null as unknown as typeof newSlots.leftArm1;
+                    break;
+                case 'rightArm1':
+                    newSlots.rightArm1 = null as unknown as typeof newSlots.rightArm1;
+                    break;
+                case 'leftLeg1':
+                    newSlots.leftLeg1 = null as unknown as typeof newSlots.leftLeg1;
+                    break;
+                case 'rightLeg1':
+                    newSlots.rightLeg1 = null as unknown as typeof newSlots.rightLeg1;
+                    break;
+                case 'tail':
+                    newSlots.tail = null as unknown as typeof newSlots.tail;
+                    break;
+                // torso cannot be moved
+                default:
+                    return prev;
+            }
+
+            // Recalculate stats
+            const stats = calculateCreatureStats(newSlots);
+
+            // Put part in freezer slot
+            setFreezer(prevFreezer => {
+                const newFreezer = [...prevFreezer];
+                newFreezer[freezerIndex] = partToMove;
+                return newFreezer;
+            });
+
+            return {
+                ...prev,
+                slots: newSlots,
+                maxHp: stats.maxHp,
+                currentHp: Math.min(prev.currentHp, stats.maxHp),
+                totalDefense: stats.totalDefense,
+            };
+        });
+    }, []);
+
+    // Reset to new creature (for New Game)
+    const resetCreature = useCallback(() => {
+        setCreature(createStarterCreature());
+        setFreezer([null, null, null]);
     }, []);
 
     // Freeze a part (add to an empty freezer slot)
@@ -259,6 +324,9 @@ export function useCreature(): UseCreatureReturn {
         freezerSlotsUsed,
         canFreeze,
         swapPart,
+        moveToFreezer,
+        emptyFreezerSlot,
+        resetCreature,
         freezePart,
         defrostPart,
         harvestPart,

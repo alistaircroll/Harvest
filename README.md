@@ -1,6 +1,8 @@
-# Harvest
+# Harvest (Stitch-a-Pet)
 
 A Frankenstein body-building Pokemon roguelike game played in a web browser.
+
+🎮 **[Play the Demo](https://stitch-a-pet.vercel.app)** — Build your own stitched-together creature!
 
 ## Tech Stack
 

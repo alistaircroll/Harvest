@@ -2,11 +2,13 @@
  * CombatScreen Component
  * 
  * Main combat interface showing player vs wild creature battle.
+ * Click on body parts to queue all attacks from that part.
  */
 
-import type { PlayerCreature, WildCreature } from '../../types';
+import type { PlayerCreature, WildCreature, SelectedAttack } from '../../types';
 import { useCombat } from '../../hooks/useCombat';
-import { HPBar, APDisplay, AttackSelector, CombatLog } from './CombatUI';
+import { HPBar, APDisplay, CombatLog } from './CombatUI';
+import { CombatCreatureDisplay } from './CombatCreatureDisplay';
 import { getAnimalDisplayName } from '../../utils/creatures';
 import './combat.css';
 
@@ -36,9 +38,9 @@ export function CombatScreen({
         playerAp,
         playerMaxAp,
         enemyMaxAp,
-        availableAttacks,
         selectedAttacks,
-        addAttack,
+        selectedSlots,
+        addAttacks,
         removeAttack,
         clearAttacks,
         executeTurn,
@@ -55,6 +57,11 @@ export function CombatScreen({
         } else {
             onDefeat();
         }
+    };
+
+    // Handle clicking a body part
+    const handlePartClick = (attacks: SelectedAttack[]) => {
+        addAttacks(attacks);
     };
 
     return (
@@ -100,8 +107,8 @@ export function CombatScreen({
                 )}
             </div>
 
-            {/* Combat Arena */}
-            <div className="combat-screen__arena">
+            {/* Combat Arena with Creatures */}
+            <div className="combat-screen__arena combat-screen__arena--with-creatures">
                 {/* Player Side */}
                 <div className="combat-screen__player">
                     <span className="combat-screen__creature-label">Your Creature</span>
@@ -113,11 +120,40 @@ export function CombatScreen({
                         />
                         <APDisplay current={playerAp} max={playerMaxAp} />
                     </div>
-                    {/* Mini creature preview could go here */}
+                </div>
+
+                {/* Player Creature Visual */}
+                <div className="combat-screen__creature-visual">
+                    <CombatCreatureDisplay
+                        creature={state.playerCreature}
+                        selectedSlots={selectedSlots}
+                        remainingAp={playerAp}
+                        onPartClick={handlePartClick}
+                        disabled={phase !== 'player_turn'}
+                    />
+                    <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-dusty-taupe)', textAlign: 'center' }}>
+                        Click a body part to attack
+                    </p>
                 </div>
 
                 {/* VS */}
                 <div className="combat-screen__versus">VS</div>
+
+                {/* Enemy Creature Visual (placeholder - could add enemy images) */}
+                <div className="combat-screen__creature-visual">
+                    <div style={{
+                        width: 100,
+                        height: 100,
+                        background: 'var(--color-bg-elevated)',
+                        borderRadius: 'var(--radius-lg)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '3rem'
+                    }}>
+                        🐀
+                    </div>
+                </div>
 
                 {/* Enemy Side */}
                 <div className="combat-screen__enemy">
@@ -136,21 +172,48 @@ export function CombatScreen({
                 </div>
             </div>
 
+            {/* Attack Queue */}
+            {phase === 'player_turn' && (
+                <div className="attack-selector">
+                    <div className="attack-selector__queue">
+                        <div className="attack-selector__queue-header">
+                            <span className="attack-selector__queue-title">Attack Queue</span>
+                            {selectedAttacks.length > 0 && (
+                                <button
+                                    className="attack-selector__clear"
+                                    onClick={clearAttacks}
+                                >
+                                    Clear
+                                </button>
+                            )}
+                        </div>
+                        <div className="attack-selector__queue-list">
+                            {selectedAttacks.length === 0 ? (
+                                <span className="attack-selector__empty">Click body parts to queue attacks...</span>
+                            ) : (
+                                selectedAttacks.map((sa, index) => (
+                                    <div key={index} className="attack-selector__queued-attack">
+                                        <span>{sa.attack.name}</span>
+                                        <button onClick={() => removeAttack(index)}>✕</button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Execute button */}
+                    <button
+                        className="attack-selector__execute"
+                        onClick={executeTurn}
+                        disabled={selectedAttacks.length === 0}
+                    >
+                        Execute Turn ({selectedAttacks.length} attack{selectedAttacks.length !== 1 ? 's' : ''})
+                    </button>
+                </div>
+            )}
+
             {/* Combat Log */}
             <CombatLog log={log} />
-
-            {/* Attack Selector (only during player turn) */}
-            {phase === 'player_turn' && (
-                <AttackSelector
-                    availableAttacks={availableAttacks}
-                    selectedAttacks={selectedAttacks}
-                    remainingAp={playerAp}
-                    onAttackSelect={addAttack}
-                    onAttackRemove={removeAttack}
-                    onClear={clearAttacks}
-                    onExecute={executeTurn}
-                />
-            )}
         </div>
     );
 }

@@ -11,7 +11,8 @@ import type {
     CombatState,
     CombatPhase,
     SelectedAttack,
-    CombatLogEntry
+    CombatLogEntry,
+    PartSlot
 } from '../types';
 import { BASE_PLAYER_AP } from '../types';
 import {
@@ -40,8 +41,11 @@ interface UseCombatReturn {
     enemyMaxAp: number;
     availableAttacks: SelectedAttack[];
     selectedAttacks: SelectedAttack[];
+    selectedSlots: PartSlot[];
     canAddAttack: (attack: SelectedAttack) => boolean;
+    canAddAttacks: (attacks: SelectedAttack[]) => boolean;
     addAttack: (attack: SelectedAttack) => void;
+    addAttacks: (attacks: SelectedAttack[]) => void;
     removeAttack: (index: number) => void;
     clearAttacks: () => void;
     executeTurn: () => void;
@@ -93,6 +97,13 @@ export function useCombat({
         return currentCost + attack.attack.apCost <= state.playerAp;
     }, [state.playerAttackQueue, state.playerAp]);
 
+    // Check if player can add multiple attacks
+    const canAddAttacks = useCallback((attacks: SelectedAttack[]) => {
+        const currentCost = getTotalApCost(state.playerAttackQueue);
+        const newCost = getTotalApCost(attacks);
+        return currentCost + newCost <= state.playerAp;
+    }, [state.playerAttackQueue, state.playerAp]);
+
     // Add attack to queue
     const addAttack = useCallback((attack: SelectedAttack) => {
         if (!canAddAttack(attack)) return;
@@ -102,6 +113,16 @@ export function useCombat({
             playerAttackQueue: [...prev.playerAttackQueue, attack]
         }));
     }, [canAddAttack]);
+
+    // Add multiple attacks to queue
+    const addAttacks = useCallback((attacks: SelectedAttack[]) => {
+        if (!canAddAttacks(attacks)) return;
+
+        setState(prev => ({
+            ...prev,
+            playerAttackQueue: [...prev.playerAttackQueue, ...attacks]
+        }));
+    }, [canAddAttacks]);
 
     // Remove attack from queue
     const removeAttack = useCallback((index: number) => {
@@ -118,6 +139,15 @@ export function useCombat({
             playerAttackQueue: []
         }));
     }, []);
+
+    // Get selected slots (for visual highlighting)
+    const selectedSlots = useMemo(() => {
+        const slots = new Set<PartSlot>();
+        for (const attack of state.playerAttackQueue) {
+            slots.add(attack.sourcePartSlot);
+        }
+        return Array.from(slots);
+    }, [state.playerAttackQueue]);
 
     // Execute a complete turn
     const executeTurn = useCallback(() => {
@@ -329,8 +359,11 @@ export function useCombat({
         enemyMaxAp,
         availableAttacks,
         selectedAttacks,
+        selectedSlots,
         canAddAttack,
+        canAddAttacks,
         addAttack,
+        addAttacks,
         removeAttack,
         clearAttacks,
         executeTurn,

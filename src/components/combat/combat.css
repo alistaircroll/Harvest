@@ -466,3 +466,104 @@
     font-size: var(--font-size-lg);
     cursor: pointer;
 }
+
+/* ================================
+   Combat Creature Display
+   ================================ */
+
+.combat-creature-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: var(--space-2);
+}
+
+.combat-creature-display__row {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+}
+
+.combat-creature-display__row--middle {
+    align-items: center;
+}
+
+/* Clickable body part in combat */
+.combat-body-part {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    padding: 4px;
+    background: var(--color-bg-elevated);
+    border: 2px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.combat-body-part__image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.combat-body-part__image--mirrored {
+    transform: scaleX(-1);
+}
+
+.combat-body-part--clickable:hover:not(:disabled) {
+    border-color: var(--color-cherry-rose);
+    transform: scale(1.05);
+    box-shadow: 0 0 12px rgba(158, 25, 70, 0.4);
+}
+
+.combat-body-part--selected {
+    border-color: var(--color-honeydew);
+    box-shadow: 0 0 12px rgba(223, 248, 235, 0.4);
+}
+
+.combat-body-part--disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.combat-body-part--disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* AP cost badge */
+.combat-body-part__cost {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 20px;
+    height: 20px;
+    background: var(--color-cherry-rose);
+    color: white;
+    font-family: var(--font-sans);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--color-bg-elevated);
+}
+
+/* Updated arena layout for creature displays */
+.combat-screen__arena--with-creatures {
+    grid-template-columns: 1fr auto auto auto 1fr;
+    gap: var(--space-3);
+}
+
+.combat-screen__creature-visual {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+}

@@ -1,0 +1,289 @@
+/**
+ * Intro Screen Styles
+ * 
+ * Dark, atmospheric styling for the launch and onboarding flow.
+ * Gothic aesthetic with typewriter-style story text.
+ */
+
+/* ================================
+   Intro Screen Base
+   ================================ */
+
+.intro-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg-primary);
+    padding: var(--space-4);
+    transition: opacity 0.3s ease;
+}
+
+.intro-screen--transitioning {
+    opacity: 0;
+}
+
+.intro-screen__content {
+    max-width: 400px;
+    text-align: center;
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ================================
+   Title Screen
+   ================================ */
+
+.intro-screen__content--title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-6);
+}
+
+.intro-screen__title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 10vw, 4rem);
+    color: var(--color-text-primary);
+    margin: 0;
+    text-shadow: 0 0 40px rgba(223, 248, 235, 0.2);
+    letter-spacing: 0.05em;
+}
+
+.intro-screen__tagline {
+    font-family: var(--font-serif);
+    font-size: var(--font-size-lg);
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.intro-screen__tagline-emphasis {
+    color: var(--color-cherry-rose);
+    font-style: italic;
+}
+
+/* ================================
+   Story Screens
+   ================================ */
+
+.intro-screen__content--story {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-8);
+}
+
+.intro-screen__story-text {
+    font-family: var(--font-serif);
+    font-size: var(--font-size-xl);
+    color: var(--color-text-primary);
+    line-height: 1.7;
+    margin: 0;
+    max-width: 320px;
+}
+
+/* ================================
+   Naming Screen
+   ================================ */
+
+.intro-screen__content--naming {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.intro-screen__prompt {
+    font-family: var(--font-serif);
+    font-size: var(--font-size-xl);
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.intro-screen__input {
+    width: 100%;
+    max-width: 280px;
+    padding: var(--space-3) var(--space-4);
+    font-family: var(--font-display);
+    font-size: var(--font-size-2xl);
+    color: var(--color-text-primary);
+    background: var(--color-bg-secondary);
+    border: 2px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    text-align: center;
+    outline: none;
+    transition: all var(--transition-fast);
+}
+
+.intro-screen__input:focus {
+    border-color: var(--color-honeydew);
+    box-shadow: 0 0 16px rgba(223, 248, 235, 0.2);
+}
+
+.intro-screen__input::placeholder {
+    color: var(--color-dusty-taupe);
+    font-size: var(--font-size-base);
+}
+
+.intro-screen__char-count {
+    font-family: var(--font-sans);
+    font-size: var(--font-size-sm);
+    color: var(--color-dusty-taupe);
+}
+
+/* ================================
+   Buttons
+   ================================ */
+
+.intro-screen__button {
+    padding: var(--space-3) var(--space-8);
+    font-family: var(--font-display);
+    font-size: var(--font-size-lg);
+    color: var(--color-text-primary);
+    background: transparent;
+    border: 2px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.intro-screen__button:hover {
+    border-color: var(--color-honeydew);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(223, 248, 235, 0.2);
+}
+
+.intro-screen__button--start {
+    background: var(--color-cherry-rose);
+    border-color: var(--color-cherry-rose);
+    color: white;
+    padding: var(--space-4) var(--space-10);
+    font-size: var(--font-size-xl);
+    letter-spacing: 0.1em;
+    margin-top: var(--space-4);
+}
+
+.intro-screen__button--start:hover:not(:disabled) {
+    background: #b01d4a;
+    border-color: #b01d4a;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(158, 25, 70, 0.4);
+}
+
+.intro-screen__button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ================================
+   Electricity Effect (for lab reveal)
+   ================================ */
+
+.electricity-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    background: transparent;
+}
+
+.electricity-overlay--active {
+    animation: electricFlash 0.8s ease-out;
+}
+
+@keyframes electricFlash {
+    0% {
+        background: rgba(223, 248, 235, 0);
+    }
+
+    10% {
+        background: rgba(223, 248, 235, 0.8);
+    }
+
+    20% {
+        background: rgba(223, 248, 235, 0.1);
+    }
+
+    30% {
+        background: rgba(223, 248, 235, 0.6);
+    }
+
+    40% {
+        background: rgba(223, 248, 235, 0);
+    }
+
+    50% {
+        background: rgba(100, 180, 255, 0.5);
+    }
+
+    60% {
+        background: rgba(223, 248, 235, 0.3);
+    }
+
+    70% {
+        background: rgba(100, 180, 255, 0.2);
+    }
+
+    100% {
+        background: transparent;
+    }
+}
+
+/* Welcome message overlay */
+.welcome-message {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-6);
+    background: rgba(2, 1, 34, 0.85);
+    z-index: 90;
+    animation: fadeIn 0.5s ease-out 0.8s both;
+}
+
+.welcome-message__text {
+    font-family: var(--font-serif);
+    font-size: var(--font-size-xl);
+    color: var(--color-text-primary);
+    text-align: center;
+    max-width: 320px;
+    line-height: 1.6;
+}
+
+.welcome-message__emphasis {
+    color: var(--color-cherry-rose);
+    font-style: italic;
+}
+
+.welcome-message__button {
+    margin-top: var(--space-6);
+    padding: var(--space-3) var(--space-8);
+    font-family: var(--font-display);
+    font-size: var(--font-size-lg);
+    color: var(--color-text-primary);
+    background: transparent;
+    border: 2px solid var(--color-honeydew);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.welcome-message__button:hover {
+    background: var(--color-honeydew);
+    color: var(--color-bg-primary);
+    transform: translateY(-2px);
+}

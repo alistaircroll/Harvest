@@ -1,17 +1,19 @@
 /**
- * Harvest - Creature Lab
+ * Stitch-a-Pet - Creature Lab
  * Main Application Component
  */
 
 import './App.css';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { IntroScreen } from './components/intro/IntroScreen';
 import { Laboratory } from './components/laboratory/Laboratory';
 import { CombatScreen } from './components/combat/CombatScreen';
 import { useCreature } from './hooks/useCreature';
 import { createWildCreature } from './data/wildCreatures';
 import type { WildCreature, MVPPartSlot, BodyPart } from './types';
+import './components/intro/intro.css';
 
-type GameScreen = 'laboratory' | 'combat';
+type GameScreen = 'intro' | 'laboratory' | 'combat';
 
 function App() {
   // Use creature hook for state management
@@ -26,8 +28,35 @@ function App() {
     healCreature,
   } = useCreature();
 
-  const [screen, setScreen] = useState<GameScreen>('laboratory');
+  const [screen, setScreen] = useState<GameScreen>('intro');
   const [wildCreature, setWildCreature] = useState<WildCreature | null>(null);
+  const [petName, setPetName] = useState<string>('');
+  const [showElectricity, setShowElectricity] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  // Handle intro completion
+  const handleIntroComplete = useCallback((name: string) => {
+    setPetName(name);
+    setScreen('laboratory');
+    // Trigger electricity effect
+    setShowElectricity(true);
+  }, []);
+
+  // After electricity effect, show welcome message
+  useEffect(() => {
+    if (showElectricity) {
+      const timer = setTimeout(() => {
+        setShowElectricity(false);
+        setShowWelcome(true);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [showElectricity]);
+
+  // Dismiss welcome message
+  const handleDismissWelcome = useCallback(() => {
+    setShowWelcome(false);
+  }, []);
 
   // Start combat with a wild creature
   const handleGoWalking = useCallback(() => {
@@ -76,6 +105,15 @@ function App() {
     setWildCreature(null);
   }, []);
 
+  // Render intro screen
+  if (screen === 'intro') {
+    return (
+      <main className="app">
+        <IntroScreen onComplete={handleIntroComplete} />
+      </main>
+    );
+  }
+
   // Render combat screen
   if (screen === 'combat' && wildCreature) {
     return (
@@ -94,6 +132,27 @@ function App() {
   // Render laboratory screen
   return (
     <main className="app">
+      {/* Electricity flash effect */}
+      {showElectricity && (
+        <div className="electricity-overlay electricity-overlay--active" />
+      )}
+
+      {/* Welcome message overlay */}
+      {showWelcome && (
+        <div className="welcome-message" onClick={handleDismissWelcome}>
+          <div>
+            <p className="welcome-message__text">
+              Time to take <strong>{petName}</strong> for a walk.
+              <br /><br />
+              Maybe you'll find some <span className="welcome-message__emphasis">... parts</span> to make it better.
+            </p>
+            <button className="welcome-message__button" onClick={handleDismissWelcome}>
+              Let's Go
+            </button>
+          </div>
+        </div>
+      )}
+
       <Laboratory
         creature={creature}
         freezer={freezer}

@@ -4,55 +4,76 @@
  */
 
 import './App.css';
-import { useState } from 'react';
-import { CreatureDisplay } from './components/creature/CreatureDisplay';
+import { useState, useCallback } from 'react';
+import { Laboratory } from './components/laboratory/Laboratory';
 import { CombatScreen } from './components/combat/CombatScreen';
-import { createStarterCreature } from './utils/creatures';
+import { useCreature } from './hooks/useCreature';
 import { createWildCreature } from './data/wildCreatures';
-import type { PlayerCreature, PartSlot, WildCreature } from './types';
+import type { WildCreature, MVPPartSlot, BodyPart } from './types';
 
 type GameScreen = 'laboratory' | 'combat';
 
 function App() {
-  // Initialize with starter rat creature
-  const [creature] = useState<PlayerCreature>(() => createStarterCreature());
-  const [selectedSlot, setSelectedSlot] = useState<PartSlot | null>(null);
+  // Use creature hook for state management
+  const {
+    creature,
+    freezer,
+    availablePartsForSlot,
+    swapPart,
+    harvestPart,
+    loseRandomPart,
+    healCreature,
+  } = useCreature();
+
   const [screen, setScreen] = useState<GameScreen>('laboratory');
   const [wildCreature, setWildCreature] = useState<WildCreature | null>(null);
 
-  const handleSlotClick = (slot: PartSlot) => {
-    setSelectedSlot(current => current === slot ? null : slot);
-  };
-
   // Start combat with a wild creature
-  const handleStartCombat = () => {
+  const handleGoWalking = useCallback(() => {
     // Create a random wild creature (for now, always rat)
     const wild = createWildCreature('rat', 'city');
     setWildCreature(wild);
     setScreen('combat');
-  };
+  }, []);
+
+  // Handle swap part from laboratory
+  const handleSwapPart = useCallback((slot: MVPPartSlot, part: BodyPart) => {
+    swapPart(slot, part);
+  }, [swapPart]);
 
   // Handle victory - harvest parts
-  const handleVictory = (loot: WildCreature['lootTable']) => {
+  const handleVictory = useCallback((loot: WildCreature['lootTable']) => {
     console.log('Victory! Loot:', loot);
-    // TODO: Show loot selection screen
+    // Harvest a random part from loot (loot is an object with part types as keys)
+    const lootParts = [loot.torso, loot.head, loot.arm, loot.leg, loot.tail];
+    const randomLoot = lootParts[Math.floor(Math.random() * lootParts.length)];
+    harvestPart(randomLoot);
+    // Heal creature
+    healCreature();
+    // Return to lab
     setScreen('laboratory');
     setWildCreature(null);
-  };
+  }, [harvestPart, healCreature]);
 
   // Handle defeat - lose a random part
-  const handleDefeat = () => {
-    console.log('Defeat! Lose a part');
-    // TODO: Implement part loss
+  const handleDefeat = useCallback(() => {
+    console.log('Defeat!');
+    const lostPart = loseRandomPart();
+    if (lostPart) {
+      console.log('Lost part:', lostPart);
+    }
+    // Heal creature
+    healCreature();
+    // Return to lab
     setScreen('laboratory');
     setWildCreature(null);
-  };
+  }, [loseRandomPart, healCreature]);
 
   // Handle flee
-  const handleFlee = () => {
+  const handleFlee = useCallback(() => {
     setScreen('laboratory');
     setWildCreature(null);
-  };
+  }, []);
 
   // Render combat screen
   if (screen === 'combat' && wildCreature) {
@@ -72,32 +93,13 @@ function App() {
   // Render laboratory screen
   return (
     <main className="app">
-      {/* Header */}
-      <header className="app__header">
-        <h1>Creature Lab</h1>
-        <p className="app__subtitle">Build Your Perfect Companion</p>
-      </header>
-
-      {/* Creature Display */}
-      <section className="app__creature">
-        <CreatureDisplay
-          creature={creature}
-          selectedSlot={selectedSlot}
-          onSlotClick={handleSlotClick}
-          isInteractive={true}
-          showStats={true}
-        />
-      </section>
-
-      {/* Action Buttons */}
-      <section className="app__actions">
-        <button
-          className="btn btn--primary btn--large"
-          onClick={handleStartCombat}
-        >
-          Go Walking
-        </button>
-      </section>
+      <Laboratory
+        creature={creature}
+        freezer={freezer}
+        availablePartsForSlot={availablePartsForSlot}
+        onSwapPart={handleSwapPart}
+        onGoWalking={handleGoWalking}
+      />
     </main>
   );
 }

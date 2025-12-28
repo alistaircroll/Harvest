@@ -414,6 +414,13 @@ export function getAnimalDisplayName(animal: AnimalType): string {
 }
 
 /**
+ * Get display name for a part type (capitalized)
+ */
+export function getPartTypeDisplayName(partType: string): string {
+    return partType.charAt(0).toUpperCase() + partType.slice(1);
+}
+
+/**
  * Check if a slot is an MVP slot (used in current version)
  */
 export function isMVPSlot(slot: PartSlot): boolean {

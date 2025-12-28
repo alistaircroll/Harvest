@@ -1,0 +1,457 @@
+/**
+ * Laboratory Styles
+ * 
+ * Gothic laboratory interface with carousel selector and freezer panel.
+ */
+
+/* ================================
+   Laboratory Screen Layout
+   ================================ */
+
+.laboratory {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: var(--space-4);
+    gap: var(--space-4);
+}
+
+.laboratory__header {
+    text-align: center;
+}
+
+.laboratory__title {
+    font-family: var(--font-display);
+    font-size: var(--font-size-2xl);
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.laboratory__subtitle {
+    font-family: var(--font-sans);
+    font-size: var(--font-size-sm);
+    color: var(--color-dusty-taupe);
+    margin-top: var(--space-1);
+}
+
+.laboratory__creature {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.laboratory__hint {
+    font-family: var(--font-sans);
+    font-size: var(--font-size-xs);
+    color: var(--color-dusty-taupe);
+    text-align: center;
+    margin-top: var(--space-2);
+}
+
+.laboratory__actions {
+    display: flex;
+    gap: var(--space-3);
+    justify-content: center;
+}
+
+/* ================================
+   Part Carousel Modal
+   ================================ */
+
+.part-carousel__overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 1, 34, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.part-carousel__modal {
+    background: var(--color-bg-secondary);
+    border: 2px solid var(--color-border-strong);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    width: 90%;
+    max-width: 500px;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.part-carousel__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-4);
+}
+
+.part-carousel__title {
+    font-family: var(--font-display);
+    font-size: var(--font-size-xl);
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.part-carousel__counter {
+    font-family: var(--font-sans);
+    font-size: var(--font-size-sm);
+    color: var(--color-dusty-taupe);
+}
+
+/* Carousel container */
+.part-carousel__carousel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+}
+
+/* Arrow buttons */
+.part-carousel__arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-3);
+    background: var(--color-bg-elevated);
+    border: 2px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    min-width: 60px;
+}
+
+.part-carousel__arrow:hover:not(:disabled) {
+    border-color: var(--color-cherry-rose);
+    transform: scale(1.05);
+}
+
+.part-carousel__arrow:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.part-carousel__arrow-icon {
+    font-size: var(--font-size-xl);
+    color: var(--color-text-primary);
+}
+
+.part-carousel__preview-label {
+    font-family: var(--font-sans);
+    font-size: var(--font-size-xs);
+    color: var(--color-dusty-taupe);
+}
+
+/* Selected part display */
+.part-carousel__selected {
+    flex: 1;
+    max-width: 200px;
+    padding: var(--space-3);
+    background: var(--color-bg-elevated);
+    border: 3px solid var(--color-border-strong);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: all var(--transition-fast);
+}
+
+.part-carousel__selected--current {
+    border-color: var(--color-honeydew);
+}
+
+.part-carousel__selected--locking {
+    border-color: var(--color-honeydew);
+    box-shadow: 0 0 20px rgba(223, 248, 235, 0.6);
+    animation: lockPulse 0.3s ease-out;
+}
+
+@keyframes lockPulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.part-carousel__image {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    margin-bottom: var(--space-2);
+}
+
+.part-carousel__placeholder {
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg-primary);
+    border-radius: var(--radius-md);
+    font-family: var(--font-display);
+    font-size: var(--font-size-lg);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-2);
+}
+
+.part-carousel__info {
+    text-align: center;
+    width: 100%;
+}
+
+.part-carousel__part-name {
+    font-family: var(--font-display);
+    font-size: var(--font-size-base);
+    color: var(--color-text-primary);
+    margin: 0 0 var(--space-2) 0;
+}
+
+.part-carousel__stats {
+    display: flex;
+    gap: var(--space-2);
+    justify-content: center;
+    margin-bottom: var(--space-2);
+}
+
+.part-carousel__stat {
+    font-family: var(--font-sans);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+}
+
+.part-carousel__stat--hp {
+    background: rgba(223, 248, 235, 0.2);
+    color: var(--color-honeydew);
+}
+
+.part-carousel__stat--def {
+    background: rgba(150, 137, 123, 0.2);
+    color: var(--color-dusty-taupe);
+}
+
+.part-carousel__attacks {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: var(--space-2);
+}
+
+.part-carousel__attack {
+    display: flex;
+    gap: var(--space-2);
+    justify-content: center;
+    font-family: var(--font-sans);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+}
+
+.part-carousel__attack-name {
+    color: var(--color-text-primary);
+}
+
+.part-carousel__attack-cost {
+    color: var(--color-cherry-rose);
+}
+
+.part-carousel__current-badge {
+    display: inline-block;
+    margin-top: var(--space-2);
+    padding: 2px 8px;
+    background: rgba(223, 248, 235, 0.2);
+    border: 1px solid var(--color-honeydew);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-sans);
+    font-size: var(--font-size-xs);
+    color: var(--color-honeydew);
+}
+
+/* Action buttons */
+.part-carousel__actions {
+    display: flex;
+    gap: var(--space-3);
+    justify-content: center;
+}
+
+.part-carousel__cancel {
+    padding: var(--space-2) var(--space-4);
+    background: transparent;
+    border: 2px solid var(--color-dusty-taupe);
+    border-radius: var(--radius-md);
+    font-family: var(--font-display);
+    font-size: var(--font-size-base);
+    color: var(--color-dusty-taupe);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.part-carousel__cancel:hover {
+    border-color: var(--color-text-secondary);
+    color: var(--color-text-secondary);
+}
+
+.part-carousel__lock-in {
+    padding: var(--space-2) var(--space-6);
+    background: var(--color-cherry-rose);
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: var(--font-display);
+    font-size: var(--font-size-lg);
+    color: white;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.part-carousel__lock-in:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(158, 25, 70, 0.4);
+}
+
+.part-carousel__lock-in:disabled {
+    opacity: 0.7;
+}
+
+/* ================================
+   Freezer Panel
+   ================================ */
+
+.freezer-panel {
+    background: var(--color-bg-secondary);
+    border: 2px solid var(--color-border-strong);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3);
+}
+
+.freezer-panel__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-2);
+}
+
+.freezer-panel__title {
+    font-family: var(--font-display);
+    font-size: var(--font-size-base);
+    color: var(--color-text-primary);
+}
+
+.freezer-panel__count {
+    font-family: var(--font-sans);
+    font-size: var(--font-size-xs);
+    color: var(--color-dusty-taupe);
+}
+
+.freezer-panel__slots {
+    display: flex;
+    gap: var(--space-2);
+    justify-content: center;
+}
+
+/* Individual freezer slot */
+.freezer-slot {
+    position: relative;
+    width: 70px;
+    height: 80px;
+    padding: var(--space-2);
+    background: var(--color-bg-elevated);
+    border: 2px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+    overflow: hidden;
+    transition: all var(--transition-fast);
+}
+
+.freezer-slot--filled {
+    border-color: rgba(100, 200, 255, 0.4);
+}
+
+.freezer-slot--can-defrost {
+    cursor: pointer;
+}
+
+.freezer-slot--can-defrost:hover {
+    border-color: var(--color-cherry-rose);
+    transform: scale(1.05);
+}
+
+/* Frost overlay */
+.freezer-slot__frost {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg,
+            rgba(100, 200, 255, 0.15) 0%,
+            rgba(150, 220, 255, 0.1) 50%,
+            rgba(100, 200, 255, 0.2) 100%);
+    pointer-events: none;
+}
+
+.freezer-slot__image {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    filter: brightness(0.9) saturate(0.7);
+}
+
+.freezer-slot__placeholder {
+    font-family: var(--font-display);
+    font-size: var(--font-size-lg);
+    color: var(--color-dusty-taupe);
+}
+
+.freezer-slot__ice-cube {
+    font-size: 24px;
+    opacity: 0.4;
+}
+
+.freezer-slot__label {
+    font-family: var(--font-sans);
+    font-size: var(--font-size-xs);
+    color: var(--color-dusty-taupe);
+    margin-top: var(--space-1);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+.freezer-slot--empty .freezer-slot__label {
+    opacity: 0.5;
+}

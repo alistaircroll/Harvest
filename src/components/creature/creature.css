@@ -119,6 +119,42 @@
     box-shadow: 0 0 12px rgba(223, 248, 235, 0.3);
 }
 
+/* Highlighted slots (has frozen alternatives) */
+.body-part-card--highlighted {
+    border-color: var(--color-cherry-rose);
+    cursor: pointer;
+    animation: highlightPulse 2s ease-in-out infinite;
+}
+
+.body-part-card--highlighted::before {
+    content: '◀ ▶';
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: var(--color-cherry-rose);
+    letter-spacing: 8px;
+}
+
+.body-part-card--highlighted:hover {
+    transform: translateY(-4px);
+    border-color: var(--color-cherry-rose);
+    box-shadow: 0 6px 16px rgba(158, 25, 70, 0.3);
+}
+
+@keyframes highlightPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(158, 25, 70, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 8px 2px rgba(158, 25, 70, 0.3);
+    }
+}
+
 /* Future/locked slots */
 .body-part-card--future {
     background: rgba(29, 30, 44, 0.3);

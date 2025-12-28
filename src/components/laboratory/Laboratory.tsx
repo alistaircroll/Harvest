@@ -2,7 +2,8 @@
  * Laboratory Screen
  * 
  * Main hub for creature customization and management.
- * Tap body parts to open carousel selector.
+ * Slots with frozen alternatives show arrows for swapping.
+ * Slots with no alternatives are not interactive.
  */
 
 import { useState } from 'react';
@@ -20,6 +21,8 @@ interface LaboratoryProps {
     freezer: ReturnType<typeof import('../../hooks/useCreature').useCreature>['freezer'];
     /** Get available parts for a slot */
     availablePartsForSlot: (slot: MVPPartSlot) => BodyPart[];
+    /** Check if a slot has alternatives in the freezer */
+    hasAlternatives: (slot: MVPPartSlot) => boolean;
     /** Swap a body part */
     onSwapPart: (slot: MVPPartSlot, part: BodyPart) => void;
     /** Called when user wants to go walking */
@@ -30,6 +33,7 @@ export function Laboratory({
     creature,
     freezer,
     availablePartsForSlot,
+    hasAlternatives,
     onSwapPart,
     onGoWalking
 }: LaboratoryProps) {
@@ -46,9 +50,11 @@ export function Laboratory({
         ? availablePartsForSlot(editingSlot)
         : [];
 
-    // Handle slot click - open carousel
+    // Handle slot click - only open carousel if slot has alternatives
     const handleSlotClick = (slot: MVPPartSlot) => {
-        setEditingSlot(slot);
+        if (hasAlternatives(slot)) {
+            setEditingSlot(slot);
+        }
     };
 
     // Handle carousel lock-in
@@ -64,12 +70,26 @@ export function Laboratory({
         setEditingSlot(null);
     };
 
+    // Determine which slots have alternatives (for visual indicator)
+    const slotsWithAlternatives = new Set<MVPPartSlot>();
+    const mvpSlots: MVPPartSlot[] = ['head', 'torso', 'leftArm1', 'rightArm1', 'leftLeg1', 'rightLeg1', 'tail'];
+    for (const slot of mvpSlots) {
+        if (hasAlternatives(slot)) {
+            slotsWithAlternatives.add(slot);
+        }
+    }
+
     return (
         <div className="laboratory">
             {/* Header */}
             <header className="laboratory__header">
                 <h1 className="laboratory__title">🧪 Creature Lab</h1>
-                <p className="laboratory__subtitle">Tap a body part to customize</p>
+                <p className="laboratory__subtitle">
+                    {slotsWithAlternatives.size > 0
+                        ? 'Tap highlighted parts to swap from freezer'
+                        : 'Collect parts from battles to customize'
+                    }
+                </p>
             </header>
 
             {/* Creature Display */}
@@ -80,8 +100,11 @@ export function Laboratory({
                     onSlotClick={(slot) => handleSlotClick(slot as MVPPartSlot)}
                     isInteractive={true}
                     showStats={true}
+                    highlightedSlots={slotsWithAlternatives}
                 />
-                <p className="laboratory__hint">← → to navigate • Enter to lock in</p>
+                {slotsWithAlternatives.size > 0 && (
+                    <p className="laboratory__hint">← → to browse • Enter to lock in</p>
+                )}
             </section>
 
             {/* Freezer Panel */}
@@ -100,8 +123,8 @@ export function Laboratory({
                 </button>
             </section>
 
-            {/* Part Carousel Modal */}
-            {editingSlot && (
+            {/* Part Carousel Modal - only shows if there are alternatives */}
+            {editingSlot && availableParts.length > 1 && (
                 <PartCarousel
                     parts={availableParts}
                     currentPart={currentPart}

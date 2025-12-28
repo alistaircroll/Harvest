@@ -1,8 +1,9 @@
 /**
  * useCreature Hook
  * 
- * Manages player creature state, freezer contents, and part inventory.
- * Provides actions for swapping parts, freezing/defrosting, and harvesting.
+ * Manages player creature state, freezer contents, and part swapping.
+ * The freezer is the core inventory - you can only swap equipped parts
+ * with frozen parts of the same type.
  */
 
 import { useState, useCallback, useMemo } from 'react';
@@ -14,21 +15,6 @@ import type {
     CreatureSlots
 } from '../types';
 import { createStarterCreature, calculateCreatureStats } from '../utils/creatures';
-import { torsos, heads, arms, legs, tails } from '../data/bodyParts';
-
-// All available basic parts (MVP inventory)
-const ALL_BASIC_PARTS: BodyPart[] = [
-    // Torsos
-    torsos.rat, torsos.squirrel, torsos.cat, torsos.dog, torsos.skunk,
-    // Heads
-    heads.rat, heads.squirrel, heads.cat, heads.dog, heads.skunk,
-    // Arms
-    arms.rat, arms.squirrel, arms.cat, arms.dog, arms.skunk,
-    // Legs
-    legs.rat, legs.squirrel, legs.cat, legs.dog, legs.skunk,
-    // Tails
-    tails.rat, tails.squirrel, tails.cat, tails.dog, tails.skunk,
-];
 
 const MAX_FREEZER_SLOTS = 3;
 
@@ -36,22 +22,28 @@ interface UseCreatureReturn {
     // State
     creature: PlayerCreature;
     freezer: (BodyPart | null)[];
-    inventory: BodyPart[];
 
     // Computed
+    /** Get available parts for a slot: equipped + frozen parts of same type */
     availablePartsForSlot: (slot: MVPPartSlot) => BodyPart[];
+    /** Check if a slot has alternatives in the freezer */
+    hasAlternatives: (slot: MVPPartSlot) => boolean;
     freezerSlotsUsed: number;
+    canFreeze: boolean;
 
     // Actions
+    /** Swap a part - old part goes to freezer, new part from freezer gets equipped */
     swapPart: (slot: MVPPartSlot, newPart: BodyPart) => void;
+    /** Add a part to an empty freezer slot */
     freezePart: (part: BodyPart) => boolean;
+    /** Remove a part from the freezer */
     defrostPart: (freezerIndex: number) => BodyPart | null;
-    harvestPart: (part: BodyPart) => void;
+    /** Add harvested part to freezer (from combat victory) */
+    harvestPart: (part: BodyPart) => boolean;
+    /** Lose a random non-essential part (on defeat) */
     loseRandomPart: () => BodyPart | null;
+    /** Heal creature to full HP */
     healCreature: () => void;
-
-    // Combat integration
-    updateCreatureAfterCombat: (updatedCreature: PlayerCreature) => void;
 }
 
 export function useCreature(): UseCreatureReturn {
@@ -60,9 +52,6 @@ export function useCreature(): UseCreatureReturn {
 
     // Freezer (3 slots, can be null)
     const [freezer, setFreezer] = useState<(BodyPart | null)[]>([null, null, null]);
-
-    // Inventory of available parts (starts with all basic parts)
-    const [inventory, setInventory] = useState<BodyPart[]>(ALL_BASIC_PARTS);
 
     // Get slot type from MVPPartSlot
     const getSlotPartType = useCallback((slot: MVPPartSlot): PartType => {
@@ -74,11 +63,45 @@ export function useCreature(): UseCreatureReturn {
         return 'torso'; // fallback
     }, []);
 
-    // Get parts available for a specific slot
+    // Get the currently equipped part for a slot
+    const getEquippedPart = useCallback((slot: MVPPartSlot): BodyPart | null => {
+        return creature.slots[slot as keyof CreatureSlots] as BodyPart | null;
+    }, [creature.slots]);
+
+    // Get frozen parts of a specific type
+    const getFrozenPartsOfType = useCallback((partType: PartType): BodyPart[] => {
+        return freezer.filter((p): p is BodyPart => p !== null && p.partType === partType);
+    }, [freezer]);
+
+    // Get available parts for a slot: equipped + frozen parts of same type
     const availablePartsForSlot = useCallback((slot: MVPPartSlot): BodyPart[] => {
         const partType = getSlotPartType(slot);
-        return inventory.filter(part => part.partType === partType);
-    }, [inventory, getSlotPartType]);
+        const equipped = getEquippedPart(slot);
+        const frozen = getFrozenPartsOfType(partType);
+
+        // Start with equipped part, then add frozen alternatives
+        const available: BodyPart[] = [];
+        if (equipped) available.push(equipped);
+
+        // Add frozen parts that aren't the same as equipped
+        for (const part of frozen) {
+            const isDuplicate = equipped &&
+                part.animalType === equipped.animalType &&
+                part.partType === equipped.partType;
+            if (!isDuplicate) {
+                available.push(part);
+            }
+        }
+
+        return available;
+    }, [getSlotPartType, getEquippedPart, getFrozenPartsOfType]);
+
+    // Check if a slot has alternatives (frozen parts of same type)
+    const hasAlternatives = useCallback((slot: MVPPartSlot): boolean => {
+        const partType = getSlotPartType(slot);
+        const frozenOfType = getFrozenPartsOfType(partType);
+        return frozenOfType.length > 0;
+    }, [getSlotPartType, getFrozenPartsOfType]);
 
     // Freezer slots used count
     const freezerSlotsUsed = useMemo(() =>
@@ -86,12 +109,16 @@ export function useCreature(): UseCreatureReturn {
         [freezer]
     );
 
-    // Swap a body part in a slot
+    // Can freeze more parts?
+    const canFreeze = freezerSlotsUsed < MAX_FREEZER_SLOTS;
+
+    // Swap a body part - old part goes to freezer, new part gets equipped
     const swapPart = useCallback((slot: MVPPartSlot, newPart: BodyPart) => {
         setCreature(prev => {
             const newSlots = { ...prev.slots } as CreatureSlots;
+            const oldPart = newSlots[slot as keyof CreatureSlots];
 
-            // Assign to the appropriate slot
+            // Assign new part to the appropriate slot
             switch (slot) {
                 case 'head':
                     newSlots.head = newPart as typeof newSlots.head;
@@ -119,6 +146,22 @@ export function useCreature(): UseCreatureReturn {
             // Recalculate stats
             const stats = calculateCreatureStats(newSlots);
 
+            // Move old part to freezer, remove new part from freezer
+            setFreezer(prevFreezer => {
+                const newFreezer = [...prevFreezer];
+
+                // Find and remove new part from freezer
+                const newPartIndex = newFreezer.findIndex(p =>
+                    p && p.animalType === newPart.animalType && p.partType === newPart.partType
+                );
+                if (newPartIndex >= 0) {
+                    // Put old part in the slot where new part was
+                    newFreezer[newPartIndex] = oldPart;
+                }
+
+                return newFreezer;
+            });
+
             return {
                 ...prev,
                 slots: newSlots,
@@ -129,7 +172,7 @@ export function useCreature(): UseCreatureReturn {
         });
     }, []);
 
-    // Freeze a part (add to freezer)
+    // Freeze a part (add to an empty freezer slot)
     const freezePart = useCallback((part: BodyPart): boolean => {
         const emptyIndex = freezer.findIndex(p => p === null);
         if (emptyIndex === -1) return false; // Freezer full
@@ -159,23 +202,29 @@ export function useCreature(): UseCreatureReturn {
         return part;
     }, [freezer]);
 
-    // Harvest a part (add to inventory after victory)
-    const harvestPart = useCallback((part: BodyPart) => {
-        setInventory(prev => [...prev, part]);
-    }, []);
+    // Harvest a part (add to freezer after victory)
+    const harvestPart = useCallback((part: BodyPart): boolean => {
+        return freezePart(part);
+    }, [freezePart]);
 
     // Lose a random non-essential part (on defeat)
     const loseRandomPart = useCallback((): BodyPart | null => {
         // Can only lose arms, legs, or tail (not head or torso)
         const loseableSlots: MVPPartSlot[] = ['leftArm1', 'rightArm1', 'leftLeg1', 'rightLeg1', 'tail'];
-        const occupiedSlots = loseableSlots.filter(slot => creature.slots[slot as keyof typeof creature.slots]);
 
-        if (occupiedSlots.length === 0) return null;
-
-        const randomSlot = occupiedSlots[Math.floor(Math.random() * occupiedSlots.length)];
-        const lostPart = creature.slots[randomSlot as keyof typeof creature.slots];
+        // Use functional update to get current creature state
+        let lostPart: BodyPart | null = null;
 
         setCreature(prev => {
+            const occupiedSlots = loseableSlots.filter(slot =>
+                prev.slots[slot as keyof typeof prev.slots]
+            );
+
+            if (occupiedSlots.length === 0) return prev;
+
+            const randomSlot = occupiedSlots[Math.floor(Math.random() * occupiedSlots.length)];
+            lostPart = prev.slots[randomSlot as keyof typeof prev.slots] as BodyPart;
+
             const newSlots = { ...prev.slots };
             (newSlots as Record<string, BodyPart | null>)[randomSlot] = null;
 
@@ -202,24 +251,19 @@ export function useCreature(): UseCreatureReturn {
         }));
     }, []);
 
-    // Update creature after combat (sync HP, effects)
-    const updateCreatureAfterCombat = useCallback((updatedCreature: PlayerCreature) => {
-        setCreature(updatedCreature);
-    }, []);
-
     return {
         creature,
         freezer,
-        inventory,
         availablePartsForSlot,
+        hasAlternatives,
         freezerSlotsUsed,
+        canFreeze,
         swapPart,
         freezePart,
         defrostPart,
         harvestPart,
         loseRandomPart,
         healCreature,
-        updateCreatureAfterCombat,
     };
 }
 

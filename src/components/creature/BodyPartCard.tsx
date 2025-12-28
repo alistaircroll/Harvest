@@ -41,6 +41,7 @@ interface BodyPartCardProps {
     isSelected?: boolean;
     isInteractive?: boolean;
     isFuture?: boolean;  // Locked future slot
+    isHighlighted?: boolean; // Has frozen alternatives
     onClick?: () => void;
     compact?: boolean;
     showImage?: boolean; // Whether to display artwork
@@ -56,6 +57,7 @@ export function BodyPartCard({
     isSelected = false,
     isInteractive = true,
     isFuture = false,
+    isHighlighted = false,
     onClick,
     compact = false,
     showImage = true,
@@ -96,7 +98,7 @@ export function BodyPartCard({
 
     return (
         <div
-            className={`body-part-card ${isSelected ? 'body-part-card--selected' : ''} ${compact ? 'body-part-card--compact' : ''} ${imageUrl ? 'body-part-card--has-image' : ''}`}
+            className={`body-part-card ${isSelected ? 'body-part-card--selected' : ''} ${compact ? 'body-part-card--compact' : ''} ${imageUrl ? 'body-part-card--has-image' : ''} ${isHighlighted ? 'body-part-card--highlighted' : ''}`}
             onClick={isInteractive ? onClick : undefined}
             role={isInteractive ? 'button' : undefined}
             tabIndex={isInteractive ? 0 : undefined}

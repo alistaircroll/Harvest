@@ -555,6 +555,22 @@
     border: 2px solid var(--color-bg-elevated);
 }
 
+/* Attack names label */
+.combat-body-part__attacks {
+    position: absolute;
+    bottom: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-sans);
+    font-size: 9px;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+}
+
 /* Updated arena layout for creature displays */
 .combat-screen__arena--with-creatures {
     grid-template-columns: 1fr auto auto auto 1fr;

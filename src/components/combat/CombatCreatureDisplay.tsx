@@ -94,11 +94,15 @@ export function CombatCreatureDisplay({
 
         const imageUrl = getBodyPartImage(part.animalType, part.partType);
 
+        // Get attack names for tooltip
+        const attackNames = attacks.map(a => a.attack.name).join(', ');
+
         return (
             <button
                 className={`combat-body-part ${hasAttacks ? 'combat-body-part--clickable' : ''} ${isSelected ? 'combat-body-part--selected' : ''} ${!canAfford && hasAttacks ? 'combat-body-part--disabled' : ''}`}
                 onClick={() => handlePartClick(slot)}
                 disabled={disabled || !hasAttacks || !canAfford}
+                title={hasAttacks ? `${attackNames} (${apCost} AP)` : undefined}
             >
                 {imageUrl && (
                     <img
@@ -109,6 +113,11 @@ export function CombatCreatureDisplay({
                 )}
                 {hasAttacks && canAfford && (
                     <span className="combat-body-part__cost">{apCost}</span>
+                )}
+                {hasAttacks && (
+                    <span className="combat-body-part__attacks">
+                        {attacks.map(a => a.attack.name).join(' / ')}
+                    </span>
                 )}
             </button>
         );

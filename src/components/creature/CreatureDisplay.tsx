@@ -18,6 +18,7 @@ interface CreatureDisplayProps {
     isInteractive?: boolean;
     showStats?: boolean;
     showFutureSlots?: boolean; // Show locked future slots
+    highlightedSlots?: Set<PartSlot>; // Slots with frozen alternatives
 }
 
 /**
@@ -30,6 +31,7 @@ export function CreatureDisplay({
     isInteractive = true,
     showStats = true,
     showFutureSlots = false,
+    highlightedSlots,
 }: CreatureDisplayProps) {
     const { slots, maxHp, currentHp, totalDefense } = creature;
     const totalAttacks = getCreatureAttacks(slots).length;
@@ -77,7 +79,8 @@ export function CreatureDisplay({
                         part={slots.head}
                         slotType="Head"
                         isSelected={selectedSlot === 'head'}
-                        isInteractive={isInteractive}
+                        isInteractive={isInteractive && highlightedSlots?.has('head')}
+                        isHighlighted={highlightedSlots?.has('head')}
                         onClick={() => handleSlotClick('head')}
                     />
                 </div>
@@ -111,7 +114,8 @@ export function CreatureDisplay({
                         part={slots.leftArm1}
                         slotType="L.Arm"
                         isSelected={selectedSlot === 'leftArm1'}
-                        isInteractive={isInteractive}
+                        isInteractive={isInteractive && highlightedSlots?.has('leftArm1')}
+                        isHighlighted={highlightedSlots?.has('leftArm1')}
                         onClick={() => handleSlotClick('leftArm1')}
                         compact
                     />
@@ -134,7 +138,8 @@ export function CreatureDisplay({
                         part={slots.rightArm1}
                         slotType="R.Arm"
                         isSelected={selectedSlot === 'rightArm1'}
-                        isInteractive={isInteractive}
+                        isInteractive={isInteractive && highlightedSlots?.has('rightArm1')}
+                        isHighlighted={highlightedSlots?.has('rightArm1')}
                         onClick={() => handleSlotClick('rightArm1')}
                         compact
                         mirrorImage
@@ -163,7 +168,8 @@ export function CreatureDisplay({
                             part={slots.leftLeg1}
                             slotType="L.Leg"
                             isSelected={selectedSlot === 'leftLeg1'}
-                            isInteractive={isInteractive}
+                            isInteractive={isInteractive && highlightedSlots?.has('leftLeg1')}
+                            isHighlighted={highlightedSlots?.has('leftLeg1')}
                             onClick={() => handleSlotClick('leftLeg1')}
                             compact
                         />
@@ -171,7 +177,8 @@ export function CreatureDisplay({
                             part={slots.rightLeg1}
                             slotType="R.Leg"
                             isSelected={selectedSlot === 'rightLeg1'}
-                            isInteractive={isInteractive}
+                            isInteractive={isInteractive && highlightedSlots?.has('rightLeg1')}
+                            isHighlighted={highlightedSlots?.has('rightLeg1')}
                             onClick={() => handleSlotClick('rightLeg1')}
                             compact
                             mirrorImage
@@ -230,7 +237,8 @@ export function CreatureDisplay({
                         part={slots.tail}
                         slotType="Tail"
                         isSelected={selectedSlot === 'tail'}
-                        isInteractive={isInteractive}
+                        isInteractive={isInteractive && highlightedSlots?.has('tail')}
+                        isHighlighted={highlightedSlots?.has('tail')}
                         onClick={() => handleSlotClick('tail')}
                         compact
                     />

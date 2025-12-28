@@ -19,6 +19,7 @@ function App() {
     creature,
     freezer,
     availablePartsForSlot,
+    hasAlternatives,
     swapPart,
     harvestPart,
     loseRandomPart,
@@ -97,6 +98,7 @@ function App() {
         creature={creature}
         freezer={freezer}
         availablePartsForSlot={availablePartsForSlot}
+        hasAlternatives={hasAlternatives}
         onSwapPart={handleSwapPart}
         onGoWalking={handleGoWalking}
       />

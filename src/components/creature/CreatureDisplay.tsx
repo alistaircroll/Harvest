@@ -2,8 +2,8 @@
  * CreatureDisplay Component
  * 
  * Renders the player's creature in a humanoid layout.
- * Body parts are arranged: head at top, arms on sides, torso center,
- * legs below, tail at bottom.
+ * Future-proofed for 8 limbs, wings, shell, and head attachments.
+ * MVP mode shows simplified layout with position-1 limbs only.
  */
 
 import type { PlayerCreature, PartSlot } from '../../types';
@@ -17,6 +17,7 @@ interface CreatureDisplayProps {
     onSlotClick?: (slot: PartSlot) => void;
     isInteractive?: boolean;
     showStats?: boolean;
+    showFutureSlots?: boolean; // Show locked future slots
 }
 
 /**
@@ -28,6 +29,7 @@ export function CreatureDisplay({
     onSlotClick,
     isInteractive = true,
     showStats = true,
+    showFutureSlots = false,
 }: CreatureDisplayProps) {
     const { slots, maxHp, currentHp, totalDefense } = creature;
     const totalAttacks = getCreatureAttacks(slots).length;
@@ -58,8 +60,17 @@ export function CreatureDisplay({
                 </div>
             )}
 
-            {/* Humanoid Layout */}
-            <div className="creature-display">
+            {/* Creature Layout */}
+            <div className={`creature-display ${showFutureSlots ? '' : 'creature-display--mvp'}`}>
+
+                {/* Future: Horns */}
+                {showFutureSlots && (
+                    <div className="creature-display__slot creature-display__slot--horns">
+                        <BodyPartCard part={slots.leftHorn} slotType="L.Horn" isFuture compact />
+                        <BodyPartCard part={slots.rightHorn} slotType="R.Horn" isFuture compact />
+                    </div>
+                )}
+
                 {/* Head */}
                 <div className="creature-display__slot creature-display__slot--head">
                     <BodyPartCard
@@ -71,14 +82,37 @@ export function CreatureDisplay({
                     />
                 </div>
 
-                {/* Left Arm */}
-                <div className="creature-display__slot creature-display__slot--left-arm">
+                {/* Future: Antennae */}
+                {showFutureSlots && (
+                    <div className="creature-display__slot creature-display__slot--antennae">
+                        <BodyPartCard part={slots.leftAntenna} slotType="L.Ant" isFuture compact />
+                        <BodyPartCard part={slots.rightAntenna} slotType="R.Ant" isFuture compact />
+                    </div>
+                )}
+
+                {/* Future: Arms 2-4 (left side) */}
+                {showFutureSlots && (
+                    <>
+                        <div className="creature-display__slot creature-display__slot--left-arm-2">
+                            <BodyPartCard part={slots.leftArm2} slotType="L.Arm2" isFuture compact />
+                        </div>
+                        <div className="creature-display__slot creature-display__slot--left-arm-3">
+                            <BodyPartCard part={slots.leftArm3} slotType="L.Arm3" isFuture compact />
+                        </div>
+                        <div className="creature-display__slot creature-display__slot--left-arm-4">
+                            <BodyPartCard part={slots.leftArm4} slotType="L.Arm4" isFuture compact />
+                        </div>
+                    </>
+                )}
+
+                {/* Left Arm 1 (MVP) */}
+                <div className="creature-display__slot creature-display__slot--left-arm-1">
                     <BodyPartCard
-                        part={slots.leftArm}
+                        part={slots.leftArm1}
                         slotType="L.Arm"
-                        isSelected={selectedSlot === 'leftArm'}
+                        isSelected={selectedSlot === 'leftArm1'}
                         isInteractive={isInteractive}
-                        onClick={() => handleSlotClick('leftArm')}
+                        onClick={() => handleSlotClick('leftArm1')}
                         compact
                     />
                 </div>
@@ -94,37 +128,98 @@ export function CreatureDisplay({
                     />
                 </div>
 
-                {/* Right Arm */}
-                <div className="creature-display__slot creature-display__slot--right-arm">
+                {/* Right Arm 1 (MVP) */}
+                <div className="creature-display__slot creature-display__slot--right-arm-1">
                     <BodyPartCard
-                        part={slots.rightArm}
+                        part={slots.rightArm1}
                         slotType="R.Arm"
-                        isSelected={selectedSlot === 'rightArm'}
+                        isSelected={selectedSlot === 'rightArm1'}
                         isInteractive={isInteractive}
-                        onClick={() => handleSlotClick('rightArm')}
+                        onClick={() => handleSlotClick('rightArm1')}
                         compact
                     />
                 </div>
 
-                {/* Legs (side by side) */}
-                <div className="creature-display__slot creature-display__slot--legs">
-                    <BodyPartCard
-                        part={slots.leftLeg}
-                        slotType="L.Leg"
-                        isSelected={selectedSlot === 'leftLeg'}
-                        isInteractive={isInteractive}
-                        onClick={() => handleSlotClick('leftLeg')}
-                        compact
-                    />
-                    <BodyPartCard
-                        part={slots.rightLeg}
-                        slotType="R.Leg"
-                        isSelected={selectedSlot === 'rightLeg'}
-                        isInteractive={isInteractive}
-                        onClick={() => handleSlotClick('rightLeg')}
-                        compact
-                    />
-                </div>
+                {/* Future: Arms 2-4 (right side) */}
+                {showFutureSlots && (
+                    <>
+                        <div className="creature-display__slot creature-display__slot--right-arm-2">
+                            <BodyPartCard part={slots.rightArm2} slotType="R.Arm2" isFuture compact />
+                        </div>
+                        <div className="creature-display__slot creature-display__slot--right-arm-3">
+                            <BodyPartCard part={slots.rightArm3} slotType="R.Arm3" isFuture compact />
+                        </div>
+                        <div className="creature-display__slot creature-display__slot--right-arm-4">
+                            <BodyPartCard part={slots.rightArm4} slotType="R.Arm4" isFuture compact />
+                        </div>
+                    </>
+                )}
+
+                {/* Legs - MVP Layout uses combined legs slot */}
+                {!showFutureSlots ? (
+                    <div className="creature-display__slot creature-display__slot--legs">
+                        <BodyPartCard
+                            part={slots.leftLeg1}
+                            slotType="L.Leg"
+                            isSelected={selectedSlot === 'leftLeg1'}
+                            isInteractive={isInteractive}
+                            onClick={() => handleSlotClick('leftLeg1')}
+                            compact
+                        />
+                        <BodyPartCard
+                            part={slots.rightLeg1}
+                            slotType="R.Leg"
+                            isSelected={selectedSlot === 'rightLeg1'}
+                            isInteractive={isInteractive}
+                            onClick={() => handleSlotClick('rightLeg1')}
+                            compact
+                        />
+                    </div>
+                ) : (
+                    <>
+                        {/* Left Leg 1-4 */}
+                        <div className="creature-display__slot creature-display__slot--left-leg-1">
+                            <BodyPartCard
+                                part={slots.leftLeg1}
+                                slotType="L.Leg"
+                                isSelected={selectedSlot === 'leftLeg1'}
+                                isInteractive={isInteractive}
+                                onClick={() => handleSlotClick('leftLeg1')}
+                                compact
+                            />
+                        </div>
+                        <div className="creature-display__slot creature-display__slot--left-leg-2">
+                            <BodyPartCard part={slots.leftLeg2} slotType="L.Leg2" isFuture compact />
+                        </div>
+                        <div className="creature-display__slot creature-display__slot--left-leg-3">
+                            <BodyPartCard part={slots.leftLeg3} slotType="L.Leg3" isFuture compact />
+                        </div>
+                        <div className="creature-display__slot creature-display__slot--left-leg-4">
+                            <BodyPartCard part={slots.leftLeg4} slotType="L.Leg4" isFuture compact />
+                        </div>
+
+                        {/* Right Leg 1-4 */}
+                        <div className="creature-display__slot creature-display__slot--right-leg-1">
+                            <BodyPartCard
+                                part={slots.rightLeg1}
+                                slotType="R.Leg"
+                                isSelected={selectedSlot === 'rightLeg1'}
+                                isInteractive={isInteractive}
+                                onClick={() => handleSlotClick('rightLeg1')}
+                                compact
+                            />
+                        </div>
+                        <div className="creature-display__slot creature-display__slot--right-leg-2">
+                            <BodyPartCard part={slots.rightLeg2} slotType="R.Leg2" isFuture compact />
+                        </div>
+                        <div className="creature-display__slot creature-display__slot--right-leg-3">
+                            <BodyPartCard part={slots.rightLeg3} slotType="R.Leg3" isFuture compact />
+                        </div>
+                        <div className="creature-display__slot creature-display__slot--right-leg-4">
+                            <BodyPartCard part={slots.rightLeg4} slotType="R.Leg4" isFuture compact />
+                        </div>
+                    </>
+                )}
 
                 {/* Tail */}
                 <div className="creature-display__slot creature-display__slot--tail">
@@ -137,6 +232,21 @@ export function CreatureDisplay({
                         compact
                     />
                 </div>
+
+                {/* Future: Wings */}
+                {showFutureSlots && (
+                    <div className="creature-display__slot creature-display__slot--wings">
+                        <BodyPartCard part={slots.leftWing} slotType="L.Wing" isFuture compact />
+                        <BodyPartCard part={slots.rightWing} slotType="R.Wing" isFuture compact />
+                    </div>
+                )}
+
+                {/* Future: Shell */}
+                {showFutureSlots && (
+                    <div className="creature-display__slot creature-display__slot--shell">
+                        <BodyPartCard part={slots.shell} slotType="Shell" isFuture compact />
+                    </div>
+                )}
             </div>
         </div>
     );

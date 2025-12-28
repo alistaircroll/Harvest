@@ -311,7 +311,7 @@ export const tails: Record<AnimalType, LimbBodyPart> = {
 /**
  * Get a body part by type and animal
  */
-export function getBodyPart(partType: PartType, animalType: AnimalType): BodyPart {
+export function getBodyPart(partType: PartType, animalType: AnimalType): BodyPart | undefined {
     switch (partType) {
         case 'torso':
             return torsos[animalType];
@@ -323,6 +323,9 @@ export function getBodyPart(partType: PartType, animalType: AnimalType): BodyPar
             return legs[animalType];
         case 'tail':
             return tails[animalType];
+        default:
+            // Future part types (wing, shell, horn, etc.) not yet implemented
+            return undefined;
     }
 }
 

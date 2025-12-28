@@ -14,6 +14,7 @@ interface BodyPartCardProps {
     slotType?: string;
     isSelected?: boolean;
     isInteractive?: boolean;
+    isFuture?: boolean;  // Locked future slot
     onClick?: () => void;
     compact?: boolean;
 }
@@ -26,14 +27,28 @@ export function BodyPartCard({
     slotType,
     isSelected = false,
     isInteractive = true,
+    isFuture = false,
     onClick,
     compact = false,
 }: BodyPartCardProps) {
+    // Future/locked slot
+    if (isFuture) {
+        return (
+            <div className="body-part-card body-part-card--future body-part-card--compact">
+                <div className="body-part-card__header">
+                    {slotType && (
+                        <span className="body-part-card__type">{slotType}</span>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
     // Empty slot
     if (!part) {
         return (
             <div
-                className={`body-part-card body-part-card--empty`}
+                className={`body-part-card body-part-card--empty ${compact ? 'body-part-card--compact' : ''}`}
                 onClick={isInteractive ? onClick : undefined}
             >
                 <div className="body-part-card__header">
@@ -48,10 +63,9 @@ export function BodyPartCard({
 
     const hasHp = 'hpBonus' in part && part.hpBonus;
 
-
     return (
         <div
-            className={`body-part-card ${isSelected ? 'body-part-card--selected' : ''}`}
+            className={`body-part-card ${isSelected ? 'body-part-card--selected' : ''} ${compact ? 'body-part-card--compact' : ''}`}
             onClick={isInteractive ? onClick : undefined}
             role={isInteractive ? 'button' : undefined}
             tabIndex={isInteractive ? 0 : undefined}
@@ -62,7 +76,7 @@ export function BodyPartCard({
                     {getAnimalDisplayName(part.animalType)}
                 </span>
                 <span className="body-part-card__type">
-                    {part.partType}
+                    {slotType || part.partType}
                 </span>
             </div>
 

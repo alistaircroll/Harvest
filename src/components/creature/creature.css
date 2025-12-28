@@ -1,7 +1,8 @@
 /**
  * Creature Display Styles
  * 
- * Gothic, stitched aesthetic for body part cards and creature layout
+ * Gothic, stitched aesthetic for body part cards and creature layout.
+ * Future-proofed grid supporting up to 8 limbs, wings, shell, and head attachments.
  */
 
 /* ================================
@@ -16,7 +17,7 @@
     padding: var(--space-3);
     cursor: pointer;
     transition: all var(--transition-fast);
-    min-width: 100px;
+    min-width: 80px;
 }
 
 .body-part-card::before {
@@ -25,13 +26,13 @@
     top: -4px;
     left: 50%;
     transform: translateX(-50%);
-    width: 20px;
-    height: 8px;
+    width: 16px;
+    height: 6px;
     background: repeating-linear-gradient(90deg,
             var(--color-dusty-taupe) 0px,
             var(--color-dusty-taupe) 2px,
             transparent 2px,
-            transparent 6px);
+            transparent 5px);
     opacity: 0.6;
 }
 
@@ -41,13 +42,13 @@
     bottom: -4px;
     left: 50%;
     transform: translateX(-50%);
-    width: 20px;
-    height: 8px;
+    width: 16px;
+    height: 6px;
     background: repeating-linear-gradient(90deg,
             var(--color-dusty-taupe) 0px,
             var(--color-dusty-taupe) 2px,
             transparent 2px,
-            transparent 6px);
+            transparent 5px);
     opacity: 0.6;
 }
 
@@ -62,6 +63,7 @@
     border-style: dashed;
     opacity: 0.4;
     cursor: default;
+    min-height: 60px;
 }
 
 .body-part-card--empty:hover {
@@ -75,12 +77,44 @@
     box-shadow: 0 0 12px rgba(223, 248, 235, 0.3);
 }
 
+/* Future/locked slots */
+.body-part-card--future {
+    background: rgba(29, 30, 44, 0.3);
+    border: 1px dashed rgba(150, 137, 123, 0.2);
+    opacity: 0.25;
+    cursor: not-allowed;
+    min-height: 40px;
+    min-width: 40px;
+}
+
+.body-part-card--future:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: rgba(150, 137, 123, 0.2);
+}
+
+.body-part-card--future .body-part-card__type {
+    font-size: 8px;
+    opacity: 0.5;
+}
+
+/* Compact variant for limbs */
+.body-part-card--compact {
+    padding: var(--space-2);
+    min-width: 70px;
+}
+
+.body-part-card--compact .body-part-card__animal {
+    font-size: var(--font-size-base);
+}
+
 /* Card Header */
 .body-part-card__header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: var(--space-2);
+    gap: var(--space-1);
 }
 
 .body-part-card__animal {
@@ -92,29 +126,30 @@
 
 .body-part-card__type {
     font-family: var(--font-sans);
-    font-size: var(--font-size-xs);
+    font-size: 10px;
     font-weight: var(--font-weight-semibold);
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.05em;
     color: var(--color-dusty-taupe);
     background: rgba(150, 137, 123, 0.15);
-    padding: 2px 6px;
+    padding: 2px 4px;
     border-radius: var(--radius-sm);
+    white-space: nowrap;
 }
 
 /* Card Stats */
 .body-part-card__stats {
     display: flex;
-    gap: var(--space-3);
+    gap: var(--space-2);
     margin-bottom: var(--space-2);
 }
 
 .body-part-card__stat {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     font-family: var(--font-sans);
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     color: var(--color-text-secondary);
 }
 
@@ -130,7 +165,7 @@
 .body-part-card__attacks {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
 }
 
 .body-part-card__attack {
@@ -138,10 +173,10 @@
     justify-content: space-between;
     align-items: center;
     background: rgba(2, 1, 34, 0.4);
-    padding: 4px 8px;
+    padding: 3px 6px;
     border-radius: var(--radius-sm);
     font-family: var(--font-sans);
-    font-size: var(--font-size-xs);
+    font-size: 10px;
 }
 
 .body-part-card__attack-name {
@@ -164,47 +199,126 @@
 
 /* ================================
    Creature Display Layout
+   Future-proofed 8-limb grid
    ================================ */
 
 .creature-display {
     display: grid;
     grid-template-areas:
-        ".     head    ."
-        "larm  torso   rarm"
-        ".     legs    ."
-        ".     tail    .";
-    grid-template-columns: 1fr minmax(120px, 140px) 1fr;
-    grid-template-rows: auto auto auto auto;
-    gap: var(--space-2);
-    max-width: 400px;
+        ".        .        horns     head      horns     .        ."
+        ".        .        .         antennae  .         .        ."
+        "larm4    larm3    larm2     torso     rarm2     rarm3    rarm4"
+        "larm4b   larm3b   larm1     torso     rarm1     rarm3b   rarm4b"
+        ".        .        lleg1     legs      rleg1     .        ."
+        ".        .        lleg2     tail      rleg2     .        ."
+        ".        .        lleg3     wings     rleg3     .        ."
+        ".        .        lleg4     shell     rleg4     .        .";
+    grid-template-columns: 50px 50px 70px 100px 70px 50px 50px;
+    grid-template-rows: auto auto auto auto auto auto auto auto;
+    gap: 4px;
+    max-width: 500px;
     margin: 0 auto;
     padding: var(--space-4);
+    justify-items: center;
+    align-items: center;
 }
 
+/* MVP creature display - simplified layout */
+.creature-display--mvp {
+    grid-template-areas:
+        ".       head      ."
+        "larm1   torso     rarm1"
+        "lleg1   legs      rleg1"
+        ".       tail      .";
+    grid-template-columns: 1fr minmax(100px, 120px) 1fr;
+    grid-template-rows: auto auto auto auto;
+    gap: var(--space-2);
+    max-width: 380px;
+}
+
+/* Slot positioning */
 .creature-display__slot {
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
+/* Head section */
 .creature-display__slot--head {
     grid-area: head;
 }
 
+.creature-display__slot--horns {
+    grid-area: horns;
+    display: flex;
+    gap: var(--space-1);
+}
+
+.creature-display__slot--antennae {
+    grid-area: antennae;
+    display: flex;
+    gap: var(--space-1);
+}
+
+/* Torso */
 .creature-display__slot--torso {
     grid-area: torso;
 }
 
-.creature-display__slot--left-arm {
-    grid-area: larm;
+/* Arms - MVP (position 1) */
+.creature-display__slot--left-arm-1 {
+    grid-area: larm1;
     justify-content: flex-end;
 }
 
-.creature-display__slot--right-arm {
-    grid-area: rarm;
+.creature-display__slot--right-arm-1 {
+    grid-area: rarm1;
     justify-content: flex-start;
 }
 
+/* Arms - Future (positions 2-4) */
+.creature-display__slot--left-arm-2 {
+    grid-area: larm2;
+    justify-content: flex-end;
+}
+
+.creature-display__slot--right-arm-2 {
+    grid-area: rarm2;
+    justify-content: flex-start;
+}
+
+.creature-display__slot--left-arm-3 {
+    grid-area: larm3;
+    justify-content: flex-end;
+}
+
+.creature-display__slot--right-arm-3 {
+    grid-area: rarm3;
+    justify-content: flex-start;
+}
+
+.creature-display__slot--left-arm-4 {
+    grid-area: larm4;
+    justify-content: flex-end;
+}
+
+.creature-display__slot--right-arm-4 {
+    grid-area: rarm4;
+    justify-content: flex-start;
+}
+
+/* Legs - MVP (position 1) */
+.creature-display__slot--left-leg-1 {
+    grid-area: lleg1;
+    justify-content: flex-end;
+}
+
+.creature-display__slot--right-leg-1 {
+    grid-area: rleg1;
+    justify-content: flex-start;
+}
+
+/* Legs area for MVP layout */
 .creature-display__slot--legs {
     grid-area: legs;
     display: flex;
@@ -212,20 +326,52 @@
     justify-content: center;
 }
 
+/* Legs - Future (positions 2-4) */
+.creature-display__slot--left-leg-2 {
+    grid-area: lleg2;
+    justify-content: flex-end;
+}
+
+.creature-display__slot--right-leg-2 {
+    grid-area: rleg2;
+    justify-content: flex-start;
+}
+
+.creature-display__slot--left-leg-3 {
+    grid-area: lleg3;
+    justify-content: flex-end;
+}
+
+.creature-display__slot--right-leg-3 {
+    grid-area: rleg3;
+    justify-content: flex-start;
+}
+
+.creature-display__slot--left-leg-4 {
+    grid-area: lleg4;
+    justify-content: flex-end;
+}
+
+.creature-display__slot--right-leg-4 {
+    grid-area: rleg4;
+    justify-content: flex-start;
+}
+
+/* Tail */
 .creature-display__slot--tail {
     grid-area: tail;
 }
 
-/* Stitching Lines Between Parts */
-.creature-display__stitch {
-    position: absolute;
-    background: repeating-linear-gradient(0deg,
-            var(--color-dusty-taupe) 0px,
-            var(--color-dusty-taupe) 3px,
-            transparent 3px,
-            transparent 8px);
-    width: 2px;
-    opacity: 0.5;
+/* Wings */
+.creature-display__slot--wings {
+    grid-area: wings;
+    display: flex;
+    gap: var(--space-1);
+}
+
+/* Shell */
+.creature-display__slot--shell {
+    grid-area: shell;
 }
 
 /* ================================
@@ -235,8 +381,8 @@
 .creature-stats {
     display: flex;
     justify-content: center;
-    gap: var(--space-8);
-    padding: var(--space-4);
+    gap: var(--space-6);
+    padding: var(--space-3);
     background: var(--color-bg-secondary);
     border-radius: var(--radius-lg);
     margin-bottom: var(--space-4);
@@ -246,18 +392,18 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--space-1);
+    gap: 2px;
 }
 
 .creature-stats__value {
     font-family: var(--font-display);
-    font-size: var(--font-size-3xl);
+    font-size: var(--font-size-2xl);
     color: var(--color-text-primary);
 }
 
 .creature-stats__label {
     font-family: var(--font-sans);
-    font-size: var(--font-size-xs);
+    font-size: 10px;
     font-weight: var(--font-weight-semibold);
     text-transform: uppercase;
     letter-spacing: 0.1em;

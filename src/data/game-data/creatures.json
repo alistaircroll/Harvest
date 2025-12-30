@@ -1,0 +1,132 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "version": "1.0.0",
+    "wildCreatures": {
+        "city": [
+            {
+                "id": "wild_rat",
+                "type": "rat",
+                "biome": "city",
+                "totalHp": 40,
+                "defense": 0,
+                "apPerTurn": 4,
+                "attacks": [
+                    "nibble",
+                    "scratch",
+                    "kick_rat",
+                    "tail_whip"
+                ],
+                "lootTable": {
+                    "torso": "rat_torso",
+                    "head": "rat_head",
+                    "arm": "rat_arm",
+                    "leg": "rat_leg",
+                    "tail": "rat_tail"
+                },
+                "spawnWeight": 10,
+                "minDepth": 0,
+                "maxDepth": 5
+            },
+            {
+                "id": "wild_squirrel",
+                "type": "squirrel",
+                "biome": "city",
+                "totalHp": 45,
+                "defense": 1,
+                "apPerTurn": 5,
+                "attacks": [
+                    "chitter",
+                    "scratch_squirrel",
+                    "kick_squirrel",
+                    "climb_a_tree"
+                ],
+                "lootTable": {
+                    "torso": "squirrel_torso",
+                    "head": "squirrel_head",
+                    "arm": "squirrel_arm",
+                    "leg": "squirrel_leg",
+                    "tail": "squirrel_tail"
+                },
+                "spawnWeight": 8,
+                "minDepth": 1,
+                "maxDepth": 8
+            },
+            {
+                "id": "wild_cat",
+                "type": "cat",
+                "biome": "city",
+                "totalHp": 55,
+                "defense": 1,
+                "apPerTurn": 5,
+                "attacks": [
+                    "bite",
+                    "swipe",
+                    "cat_scratch_fever",
+                    "pounce"
+                ],
+                "lootTable": {
+                    "torso": "cat_torso",
+                    "head": "cat_head",
+                    "arm": "cat_arm",
+                    "leg": "cat_leg",
+                    "tail": "cat_tail"
+                },
+                "spawnWeight": 5,
+                "minDepth": 2,
+                "maxDepth": 10
+            },
+            {
+                "id": "wild_dog",
+                "type": "dog",
+                "biome": "city",
+                "totalHp": 65,
+                "defense": 3,
+                "apPerTurn": 5,
+                "attacks": [
+                    "bite_dog",
+                    "paw_slap",
+                    "kick_dog",
+                    "lick_it_better"
+                ],
+                "lootTable": {
+                    "torso": "dog_torso",
+                    "head": "dog_head",
+                    "arm": "dog_arm",
+                    "leg": "dog_leg",
+                    "tail": "dog_tail"
+                },
+                "spawnWeight": 3,
+                "minDepth": 3,
+                "maxDepth": 15
+            },
+            {
+                "id": "wild_skunk",
+                "type": "skunk",
+                "biome": "city",
+                "totalHp": 55,
+                "defense": 3,
+                "apPerTurn": 5,
+                "attacks": [
+                    "bite_skunk",
+                    "claw",
+                    "kick_skunk",
+                    "stinky_spray"
+                ],
+                "lootTable": {
+                    "torso": "skunk_torso",
+                    "head": "skunk_head",
+                    "arm": "skunk_arm",
+                    "leg": "skunk_leg",
+                    "tail": "skunk_tail"
+                },
+                "spawnWeight": 4,
+                "minDepth": 4,
+                "maxDepth": 20
+            }
+        ],
+        "woods": [],
+        "pond": [],
+        "beach": [],
+        "jungle": []
+    }
+}

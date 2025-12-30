@@ -1,0 +1,28 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "version": "1.0.0",
+    "global": {
+        "playerStartingHp": 50,
+        "freezerSlots": 3,
+        "maxApPerTurn": 5,
+        "healingMultiplier": 1.0,
+        "damageMultiplier": 1.0
+    },
+    "progression": {
+        "hpScalingPerDepth": 5,
+        "defenseScalingPerDepth": 0.5,
+        "encounterDifficultyMultiplier": 1.1
+    },
+    "combat": {
+        "initiativeRandomness": 20,
+        "critChance": 0.05,
+        "missChance": 0.05
+    },
+    "tuning": {
+        "lastUpdated": "2025-12-29T16:30:00Z",
+        "simulationRuns": 0,
+        "targetWinRate": 0.65,
+        "currentWinRate": null,
+        "notes": "Initial balance parameters - not yet tuned"
+    }
+}

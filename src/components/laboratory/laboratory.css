@@ -59,8 +59,40 @@
 .laboratory__footer {
     display: flex;
     justify-content: center;
-    padding-top: var(--space-2);
+    padding: var(--space-4);
+    text-align: center;
     border-top: 1px solid var(--color-border-subtle);
+}
+
+.laboratory__warning {
+    background: rgba(158, 25, 70, 0.15);
+    border: 1px solid var(--color-cherry-rose);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    margin: var(--space-4) 0;
+    text-align: center;
+    animation: pulse 2s infinite;
+}
+
+.laboratory__warning-title {
+    color: var(--color-cherry-rose);
+    font-family: var(--font-display);
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--space-2);
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(158, 25, 70, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(158, 25, 70, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(158, 25, 70, 0);
+    }
 }
 
 .btn--ghost {
@@ -553,6 +585,67 @@
     50% {
         transform: scale(1.05);
     }
+}
+
+/* ================================
+   Basic Parts Drawer
+   ================================ */
+
+.basic-parts-drawer {
+    background: var(--color-bg-elevated);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    box-shadow: var(--shadow-md);
+}
+
+.basic-parts-drawer__header {
+    margin-bottom: var(--space-3);
+}
+
+.basic-parts-drawer__title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin: 0 0 var(--space-1);
+}
+
+.basic-parts-drawer__subtitle {
+    font-size: var(--font-size-xs);
+    color: var(--color-dusty-taupe);
+    margin: 0;
+}
+
+.basic-parts-drawer__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-3);
+}
+
+.basic-parts-drawer__slot {
+    position: relative;
+    cursor: grab;
+    transition: transform 0.2s ease;
+}
+
+.basic-parts-drawer__slot:active {
+    cursor: grabbing;
+}
+
+.basic-parts-drawer__slot:hover {
+    transform: translateY(-2px);
+}
+
+.basic-parts-drawer__badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: var(--color-moss-green);
+    color: var(--color-parchment);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
 }
 
 /* Cancel overlay */

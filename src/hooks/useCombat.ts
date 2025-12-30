@@ -4,7 +4,7 @@
  * Manages combat state, turns, and attack resolution.
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import type {
     PlayerCreature,
     WildCreature,
@@ -22,7 +22,8 @@ import {
     getEffectiveMaxAp,
     applyEffect,
     isCreatureDefeated,
-    getTotalApCost
+    getTotalApCost,
+    calculateInitiative
 } from '../utils/combat';
 import { getCreatureAttacks } from '../utils/creatures';
 
@@ -68,6 +69,8 @@ export function useCombat({
         wildCreature: { ...wildCreature },
         enemyAp: wildCreature.apPerTurn,
         enemyAttackQueue: [],
+        initiativeQueue: [],
+        currentInitiativeIndex: 0,
         log: [{
             turn: 1,
             message: `A wild ${wildCreature.type} appears!`,
@@ -149,205 +152,280 @@ export function useCombat({
         return Array.from(slots);
     }, [state.playerAttackQueue]);
 
-    // Execute a complete turn
-    const executeTurn = useCallback(() => {
+    // Execute step of initiative queue
+    const resolveNextAction = useCallback(() => {
         setState(prev => {
+            const queue = prev.initiativeQueue;
+            const index = prev.currentInitiativeIndex;
+
+            // If queue finished, end turn
+            if (index >= queue.length) {
+                // Process DoT effects at end of turn
+                const newLog = [...prev.log];
+                let playerCreatureState = { ...prev.playerCreature };
+                let wildCreatureState = { ...prev.wildCreature };
+                const turn = prev.turn;
+
+                // Enemy DoT
+                if (wildCreatureState.activeEffects.length > 0) {
+                    const dotResult = processDotEffects(
+                        wildCreatureState.activeEffects,
+                        wildCreatureState.currentHp,
+                        newLog,
+                        turn,
+                        wildCreatureState.type
+                    );
+                    wildCreatureState = {
+                        ...wildCreatureState,
+                        currentHp: dotResult.newHp,
+                        activeEffects: dotResult.newEffects
+                    };
+                }
+
+                // Player DoT
+                if (playerCreatureState.activeEffects.length > 0) {
+                    const dotResult = processDotEffects(
+                        playerCreatureState.activeEffects,
+                        playerCreatureState.currentHp,
+                        newLog,
+                        turn,
+                        'Your creature'
+                    );
+                    playerCreatureState = {
+                        ...playerCreatureState,
+                        currentHp: dotResult.newHp,
+                        activeEffects: dotResult.newEffects
+                    };
+                }
+
+                // Check DoT deaths
+                if (isCreatureDefeated(wildCreatureState.currentHp)) {
+                    newLog.push({ turn, message: `The ${wildCreatureState.type} succumbs to poison!`, type: 'info' });
+                    return {
+                        ...prev,
+                        phase: 'victory',
+                        playerCreature: playerCreatureState,
+                        wildCreature: wildCreatureState,
+                        log: newLog,
+                        initiativeQueue: [],
+                        currentInitiativeIndex: 0
+                    };
+                }
+                if (isCreatureDefeated(playerCreatureState.currentHp)) {
+                    newLog.push({ turn, message: 'Your creature succumbs to poison!', type: 'info' });
+                    return {
+                        ...prev,
+                        phase: 'defeat',
+                        playerCreature: playerCreatureState,
+                        wildCreature: wildCreatureState,
+                        log: newLog,
+                        initiativeQueue: [],
+                        currentInitiativeIndex: 0
+                    };
+                }
+
+                // Next turn
+                const newTurn = turn + 1;
+                newLog.push({ turn: newTurn, message: `--- Turn ${newTurn} ---`, type: 'info' });
+
+                return {
+                    ...prev,
+                    phase: 'player_turn',
+                    turn: newTurn,
+                    playerCreature: playerCreatureState,
+                    wildCreature: wildCreatureState,
+                    playerAp: getEffectiveMaxAp(BASE_PLAYER_AP, playerCreatureState.activeEffects),
+                    playerAttackQueue: [],
+                    enemyAp: getEffectiveMaxAp(wildCreatureState.apPerTurn, wildCreatureState.activeEffects),
+                    log: newLog,
+                    initiativeQueue: [],
+                    currentInitiativeIndex: 0
+                };
+            }
+
+            // --- PROCESS ACTION ---
+            const entry = queue[index];
             const newLog = [...prev.log];
-            const turn = prev.turn;
+            const playerCreatureState = { ...prev.playerCreature };
+            const wildCreatureState = { ...prev.wildCreature };
+            let currentPlayerAp = prev.playerAp; // Track AP changes
+            let currentEnemyAp = prev.enemyAp;
+            let phase = prev.phase;
 
-            // Clone creature states
-            let playerCreatureState = { ...prev.playerCreature };
-            let wildCreatureState = { ...prev.wildCreature };
+            // Check for stun/freeze
+            const actingCreature = entry.actorId === 'player' ? playerCreatureState : wildCreatureState;
+            const actorName = entry.actorId === 'player' ? 'Your creature' : `The ${wildCreatureState.type}`;
 
-            // ----- PLAYER ATTACKS PHASE -----
-            newLog.push({ turn, message: '--- Your Turn ---', type: 'info' });
+            const isDisabled = actingCreature.activeEffects.some(e =>
+                e.type === 'stun' || e.type === 'freeze' || e.type === 'sleep'
+            );
 
-            for (const selectedAttack of prev.playerAttackQueue) {
-                const { attack } = selectedAttack;
+            if (isDisabled) {
+                newLog.push({
+                    turn: prev.turn,
+                    message: `${actorName} is disabled and cannot act!`,
+                    type: 'info'
+                });
 
+                return {
+                    ...prev,
+                    phase,
+                    playerCreature: playerCreatureState,
+                    wildCreature: wildCreatureState,
+                    playerAp: currentPlayerAp,
+                    enemyAp: currentEnemyAp,
+                    log: newLog,
+                    currentInitiativeIndex: index + 1
+                };
+            }
+
+            // Resolve Attack
+            if (entry.actorId === 'player') {
+                const attack = entry.attack as SelectedAttack;
                 const result = resolveAttack(
-                    attack,
+                    attack.attack,
                     'You',
                     wildCreatureState.defense,
                     wildCreatureState.activeEffects,
                     newLog,
-                    turn
+                    prev.turn,
+                    { hp: playerCreatureState.currentHp, maxHp: playerCreatureState.maxHp, effects: playerCreatureState.activeEffects },
+                    wildCreatureState.currentHp,
+                    wildCreatureState.totalHp
                 );
 
-                // Apply damage to enemy
+                // Apply results
                 if (result.hit && result.damage > 0) {
-                    wildCreatureState = {
-                        ...wildCreatureState,
-                        currentHp: Math.max(0, wildCreatureState.currentHp - result.damage)
-                    };
+                    wildCreatureState.currentHp = Math.max(0, wildCreatureState.currentHp - result.damage);
                 }
-
-                // Apply heal to self
                 if (result.healAmount > 0) {
-                    playerCreatureState = {
-                        ...playerCreatureState,
-                        currentHp: Math.min(
-                            playerCreatureState.maxHp,
-                            playerCreatureState.currentHp + result.healAmount
-                        )
-                    };
+                    playerCreatureState.currentHp = Math.min(playerCreatureState.maxHp, playerCreatureState.currentHp + result.healAmount);
                 }
-
-                // Apply effect to enemy
-                if (result.effectApplied) {
-                    wildCreatureState = {
-                        ...wildCreatureState,
-                        activeEffects: applyEffect(
+                if (result.effects.length > 0) {
+                    result.effects.forEach(eff => {
+                        wildCreatureState.activeEffects = applyEffect(
                             wildCreatureState.activeEffects,
-                            result.effectApplied,
-                            selectedAttack.sourcePartSlot
-                        )
-                    };
+                            eff,
+                            attack.sourcePartSlot
+                        );
+                    });
                 }
-
-                // Check if enemy defeated
-                if (isCreatureDefeated(wildCreatureState.currentHp)) {
-                    newLog.push({ turn, message: `The ${wildCreatureState.type} is defeated!`, type: 'info' });
-
-                    return {
-                        ...prev,
-                        phase: 'victory' as CombatPhase,
-                        playerCreature: playerCreatureState,
-                        wildCreature: wildCreatureState,
-                        playerAttackQueue: [],
-                        log: newLog
-                    };
+                if (result.apChange !== 0) {
+                    currentPlayerAp = Math.max(0, currentPlayerAp + result.apChange);
                 }
-            }
-
-            // ----- ENEMY ATTACKS PHASE -----
-            newLog.push({ turn, message: `--- ${wildCreatureState.type}'s Turn ---`, type: 'info' });
-
-            // Enemy AI selects attacks
-            const enemyAttacks = selectEnemyAttacks(wildCreatureState, enemyMaxAp);
-
-            for (const attack of enemyAttacks) {
+            } else {
+                // Enemy Attack
+                const attack = entry.attack as import('../types').Attack;
                 const result = resolveAttack(
                     attack,
                     wildCreatureState.type,
                     playerCreatureState.totalDefense,
                     playerCreatureState.activeEffects,
                     newLog,
-                    turn
-                );
-
-                // Apply damage to player
-                if (result.hit && result.damage > 0) {
-                    playerCreatureState = {
-                        ...playerCreatureState,
-                        currentHp: Math.max(0, playerCreatureState.currentHp - result.damage)
-                    };
-                }
-
-                // Apply effect to player
-                if (result.effectApplied) {
-                    playerCreatureState = {
-                        ...playerCreatureState,
-                        activeEffects: applyEffect(
-                            playerCreatureState.activeEffects,
-                            result.effectApplied,
-                            'enemy'
-                        )
-                    };
-                }
-
-                // Check if player defeated
-                if (isCreatureDefeated(playerCreatureState.currentHp)) {
-                    newLog.push({ turn, message: 'Your creature is defeated!', type: 'info' });
-
-                    return {
-                        ...prev,
-                        phase: 'defeat' as CombatPhase,
-                        playerCreature: playerCreatureState,
-                        wildCreature: wildCreatureState,
-                        playerAttackQueue: [],
-                        log: newLog
-                    };
-                }
-            }
-
-            // ----- END OF TURN: Process DoT effects -----
-            // Enemy DoT
-            if (wildCreatureState.activeEffects.length > 0) {
-                const dotResult = processDotEffects(
-                    wildCreatureState.activeEffects,
-                    wildCreatureState.currentHp,
-                    newLog,
-                    turn,
-                    wildCreatureState.type
-                );
-                wildCreatureState = {
-                    ...wildCreatureState,
-                    currentHp: dotResult.newHp,
-                    activeEffects: dotResult.newEffects
-                };
-
-                if (isCreatureDefeated(wildCreatureState.currentHp)) {
-                    newLog.push({ turn, message: `The ${wildCreatureState.type} succumbs to poison!`, type: 'info' });
-                    return {
-                        ...prev,
-                        phase: 'victory' as CombatPhase,
-                        playerCreature: playerCreatureState,
-                        wildCreature: wildCreatureState,
-                        playerAttackQueue: [],
-                        log: newLog
-                    };
-                }
-            }
-
-            // Player DoT
-            if (playerCreatureState.activeEffects.length > 0) {
-                const dotResult = processDotEffects(
-                    playerCreatureState.activeEffects,
+                    prev.turn,
+                    { hp: wildCreatureState.currentHp, maxHp: wildCreatureState.totalHp, effects: wildCreatureState.activeEffects },
                     playerCreatureState.currentHp,
-                    newLog,
-                    turn,
-                    'Your creature'
+                    playerCreatureState.maxHp
                 );
-                playerCreatureState = {
-                    ...playerCreatureState,
-                    currentHp: dotResult.newHp,
-                    activeEffects: dotResult.newEffects
-                };
 
-                if (isCreatureDefeated(playerCreatureState.currentHp)) {
-                    newLog.push({ turn, message: 'Your creature succumbs to poison!', type: 'info' });
-                    return {
-                        ...prev,
-                        phase: 'defeat' as CombatPhase,
-                        playerCreature: playerCreatureState,
-                        wildCreature: wildCreatureState,
-                        playerAttackQueue: [],
-                        log: newLog
-                    };
+                if (result.hit && result.damage > 0) {
+                    playerCreatureState.currentHp = Math.max(0, playerCreatureState.currentHp - result.damage);
+                }
+                if (result.effects.length > 0) {
+                    result.effects.forEach(eff => {
+                        playerCreatureState.activeEffects = applyEffect(
+                            playerCreatureState.activeEffects,
+                            eff,
+                            'enemy' // Source is enemy
+                        );
+                    });
+                }
+                if (result.apChange !== 0) {
+                    currentEnemyAp = Math.max(0, currentEnemyAp + result.apChange);
                 }
             }
 
-            // ----- NEXT TURN -----
-            const newTurn = turn + 1;
-            newLog.push({ turn: newTurn, message: `--- Turn ${newTurn} ---`, type: 'info' });
+            // Check Immediate Deaths
+            if (isCreatureDefeated(wildCreatureState.currentHp)) {
+                newLog.push({ turn: prev.turn, message: `The ${wildCreatureState.type} is defeated!`, type: 'info' });
+                phase = 'victory';
+            } else if (isCreatureDefeated(playerCreatureState.currentHp)) {
+                newLog.push({ turn: prev.turn, message: 'Your creature is defeated!', type: 'info' });
+                phase = 'defeat';
+            }
 
             return {
                 ...prev,
-                phase: 'player_turn' as CombatPhase,
-                turn: newTurn,
+                phase,
                 playerCreature: playerCreatureState,
-                playerAp: getEffectiveMaxAp(BASE_PLAYER_AP, playerCreatureState.activeEffects),
-                playerAttackQueue: [],
                 wildCreature: wildCreatureState,
-                enemyAp: getEffectiveMaxAp(wildCreatureState.apPerTurn, wildCreatureState.activeEffects),
+                playerAp: currentPlayerAp,
+                enemyAp: currentEnemyAp,
+                log: newLog,
+                currentInitiativeIndex: index + 1
+            };
+        });
+    }, []);
+
+    // Effect to drive the queue
+    useEffect(() => {
+        if (state.phase === 'resolution' && state.currentInitiativeIndex <= state.initiativeQueue.length) {
+            // Check if combat ended inside resolution
+            if (state.playerCreature.currentHp <= 0 || state.wildCreature.currentHp <= 0) return;
+
+            const timer = setTimeout(() => {
+                resolveNextAction();
+            }, 800); // 800ms delay between actions
+            return () => clearTimeout(timer);
+        }
+    }, [state.phase, state.currentInitiativeIndex, state.initiativeQueue.length, resolveNextAction, state.playerCreature.currentHp, state.wildCreature.currentHp]);
+
+
+    // Commit turn: Build queue and start resolution
+    const executeTurn = useCallback(() => {
+        setState(prev => {
+            const queue: import('../types').InitiativeEntry[] = [];
+            const newLog = [...prev.log];
+
+            newLog.push({ turn: prev.turn, message: '--- Resolution Phase ---', type: 'info' });
+
+            // 1. Add Player Attacks
+            prev.playerAttackQueue.forEach(sa => {
+                queue.push({
+                    actorId: 'player',
+                    speed: calculateInitiative(sa.attack, prev.playerCreature),
+                    attack: sa
+                });
+            });
+
+            // 2. Add Enemy Attacks
+            const enemyAttacks = selectEnemyAttacks(prev.wildCreature, prev.enemyAp);
+            enemyAttacks.forEach(a => {
+                queue.push({
+                    actorId: 'enemy',
+                    speed: calculateInitiative(a, prev.wildCreature),
+                    attack: a
+                });
+            });
+
+            // 3. Sort by Speed (High to Low)
+            queue.sort((a, b) => b.speed - a.speed);
+
+            // Log the order (debug/flavor)
+            // queue.forEach(entry => {
+            //    const name = entry.actorId === 'player' ? (entry.attack as SelectedAttack).attack.name : (entry.attack as Attack).name;
+            //    newLog.push({ turn: prev.turn, message: `> ${name} (Speed: ${entry.speed})`, type: 'info' });
+            // });
+
+            return {
+                ...prev,
+                phase: 'resolution',
+                initiativeQueue: queue,
+                currentInitiativeIndex: 0,
                 log: newLog
             };
         });
-    }, [enemyMaxAp]);
-
-    // Callbacks for victory/defeat
-    // (Would typically be called after animation completes)
+    }, []);
 
     return {
         state,

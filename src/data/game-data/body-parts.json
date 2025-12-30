@@ -1,0 +1,374 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "version": "1.0.0",
+    "bodyParts": {
+        "heads": {
+            "rat": {
+                "id": "rat_head",
+                "partType": "head",
+                "animalType": "rat",
+                "hpBonus": 10,
+                "defense": 0,
+                "speedBonus": 8,
+                "attacks": [
+                    "nibble"
+                ],
+                "rarity": "common",
+                "biomes": [
+                    "city"
+                ]
+            },
+            "squirrel": {
+                "id": "squirrel_head",
+                "partType": "head",
+                "animalType": "squirrel",
+                "hpBonus": 10,
+                "defense": 0,
+                "speedBonus": 12,
+                "attacks": [
+                    "chitter"
+                ],
+                "rarity": "common",
+                "biomes": [
+                    "city",
+                    "park"
+                ]
+            },
+            "cat": {
+                "id": "cat_head",
+                "partType": "head",
+                "animalType": "cat",
+                "hpBonus": 12,
+                "defense": 0,
+                "speedBonus": 15,
+                "attacks": [
+                    "bite",
+                    "hiss"
+                ],
+                "rarity": "uncommon",
+                "biomes": [
+                    "city",
+                    "park"
+                ]
+            },
+            "dog": {
+                "id": "dog_head",
+                "partType": "head",
+                "animalType": "dog",
+                "hpBonus": 15,
+                "defense": 1,
+                "speedBonus": 5,
+                "attacks": [
+                    "bite_dog",
+                    "lick_it_better"
+                ],
+                "rarity": "uncommon",
+                "biomes": [
+                    "city",
+                    "park"
+                ]
+            },
+            "skunk": {
+                "id": "skunk_head",
+                "partType": "head",
+                "animalType": "skunk",
+                "hpBonus": 12,
+                "defense": 1,
+                "speedBonus": 3,
+                "attacks": [
+                    "bite_skunk"
+                ],
+                "rarity": "rare",
+                "biomes": [
+                    "city",
+                    "forest"
+                ]
+            }
+        },
+        "torsos": {
+            "rat": {
+                "id": "rat_torso",
+                "partType": "torso",
+                "animalType": "rat",
+                "hpBonus": 20,
+                "defense": 0,
+                "attacks": [],
+                "rarity": "common",
+                "biomes": [
+                    "city"
+                ]
+            },
+            "squirrel": {
+                "id": "squirrel_torso",
+                "partType": "torso",
+                "animalType": "squirrel",
+                "hpBonus": 22,
+                "defense": 0,
+                "attacks": [],
+                "rarity": "common",
+                "biomes": [
+                    "city",
+                    "park"
+                ]
+            },
+            "cat": {
+                "id": "cat_torso",
+                "partType": "torso",
+                "animalType": "cat",
+                "hpBonus": 25,
+                "defense": 1,
+                "attacks": [],
+                "rarity": "uncommon",
+                "biomes": [
+                    "city",
+                    "park"
+                ]
+            },
+            "dog": {
+                "id": "dog_torso",
+                "partType": "torso",
+                "animalType": "dog",
+                "hpBonus": 30,
+                "defense": 2,
+                "attacks": [],
+                "rarity": "uncommon",
+                "biomes": [
+                    "city",
+                    "park"
+                ]
+            },
+            "skunk": {
+                "id": "skunk_torso",
+                "partType": "torso",
+                "animalType": "skunk",
+                "hpBonus": 25,
+                "defense": 2,
+                "attacks": [],
+                "rarity": "rare",
+                "biomes": [
+                    "city",
+                    "forest"
+                ]
+            }
+        },
+        "arms": {
+            "rat": {
+                "id": "rat_arm",
+                "partType": "arm",
+                "animalType": "rat",
+                "defense": 0,
+                "attacks": [
+                    "scratch"
+                ],
+                "rarity": "common",
+                "biomes": [
+                    "city"
+                ]
+            },
+            "squirrel": {
+                "id": "squirrel_arm",
+                "partType": "arm",
+                "animalType": "squirrel",
+                "defense": 0,
+                "attacks": [
+                    "scratch_squirrel"
+                ],
+                "rarity": "common",
+                "biomes": [
+                    "city",
+                    "park"
+                ]
+            },
+            "cat": {
+                "id": "cat_arm",
+                "partType": "arm",
+                "animalType": "cat",
+                "defense": 0,
+                "attacks": [
+                    "swipe",
+                    "cat_scratch_fever"
+                ],
+                "rarity": "uncommon",
+                "biomes": [
+                    "city",
+                    "park"
+                ]
+            },
+            "dog": {
+                "id": "dog_arm",
+                "partType": "arm",
+                "animalType": "dog",
+                "defense": 1,
+                "attacks": [
+                    "paw_slap"
+                ],
+                "rarity": "uncommon",
+                "biomes": [
+                    "city",
+                    "park"
+                ]
+            },
+            "skunk": {
+                "id": "skunk_arm",
+                "partType": "arm",
+                "animalType": "skunk",
+                "defense": 0,
+                "attacks": [
+                    "claw"
+                ],
+                "rarity": "rare",
+                "biomes": [
+                    "city",
+                    "forest"
+                ]
+            }
+        },
+        "legs": {
+            "rat": {
+                "id": "rat_leg",
+                "partType": "leg",
+                "animalType": "rat",
+                "defense": 0,
+                "attacks": [
+                    "kick"
+                ],
+                "rarity": "common",
+                "biomes": [
+                    "city"
+                ]
+            },
+            "squirrel": {
+                "id": "squirrel_leg",
+                "partType": "leg",
+                "animalType": "squirrel",
+                "defense": 0,
+                "attacks": [
+                    "kick_squirrel",
+                    "climb_a_tree"
+                ],
+                "rarity": "common",
+                "biomes": [
+                    "city",
+                    "park"
+                ]
+            },
+            "cat": {
+                "id": "cat_leg",
+                "partType": "leg",
+                "animalType": "cat",
+                "defense": 0,
+                "attacks": [
+                    "kick_cat",
+                    "pounce"
+                ],
+                "rarity": "uncommon",
+                "biomes": [
+                    "city",
+                    "park"
+                ]
+            },
+            "dog": {
+                "id": "dog_leg",
+                "partType": "leg",
+                "animalType": "dog",
+                "defense": 1,
+                "attacks": [
+                    "kick_dog"
+                ],
+                "rarity": "uncommon",
+                "biomes": [
+                    "city",
+                    "park"
+                ]
+            },
+            "skunk": {
+                "id": "skunk_leg",
+                "partType": "leg",
+                "animalType": "skunk",
+                "defense": 0,
+                "attacks": [
+                    "kick"
+                ],
+                "rarity": "rare",
+                "biomes": [
+                    "city",
+                    "forest"
+                ]
+            }
+        },
+        "tails": {
+            "rat": {
+                "id": "rat_tail",
+                "partType": "tail",
+                "animalType": "rat",
+                "defense": 0,
+                "attacks": [
+                    "tail_whip"
+                ],
+                "rarity": "common",
+                "biomes": [
+                    "city"
+                ]
+            },
+            "squirrel": {
+                "id": "squirrel_tail",
+                "partType": "tail",
+                "animalType": "squirrel",
+                "defense": 0,
+                "attacks": [
+                    "fluffy_distract",
+                    "distract"
+                ],
+                "rarity": "common",
+                "biomes": [
+                    "city",
+                    "park"
+                ]
+            },
+            "cat": {
+                "id": "cat_tail",
+                "partType": "tail",
+                "animalType": "cat",
+                "defense": 0,
+                "attacks": [
+                    "tail_whip_cat"
+                ],
+                "rarity": "uncommon",
+                "biomes": [
+                    "city",
+                    "park"
+                ]
+            },
+            "dog": {
+                "id": "dog_tail",
+                "partType": "tail",
+                "animalType": "dog",
+                "defense": 0,
+                "attacks": [
+                    "tail_wag",
+                    "happy_wag"
+                ],
+                "rarity": "uncommon",
+                "biomes": [
+                    "city",
+                    "park"
+                ]
+            },
+            "skunk": {
+                "id": "skunk_tail",
+                "partType": "tail",
+                "animalType": "skunk",
+                "defense": 0,
+                "attacks": [
+                    "tail_slap",
+                    "stinky_spray"
+                ],
+                "rarity": "rare",
+                "biomes": [
+                    "city",
+                    "forest"
+                ]
+            }
+        }
+    }
+}

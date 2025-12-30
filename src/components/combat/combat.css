@@ -93,6 +93,30 @@
     gap: var(--space-2);
 }
 
+.ap-display--shake {
+    animation: shake-ap 0.4s ease-in-out;
+}
+
+@keyframes shake-ap {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-4px);
+    }
+
+    50% {
+        transform: translateX(4px);
+    }
+
+    75% {
+        transform: translateX(-4px);
+    }
+}
+
 .ap-display__label {
     font-family: var(--font-sans);
     font-size: var(--font-size-xs);
@@ -127,13 +151,13 @@
 }
 
 /* ================================
-   Attack Button
+   Attack Card
    ================================ */
 
-.attack-button {
+.attack-card {
     display: flex;
     flex-direction: column;
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-3);
     background: var(--color-bg-elevated);
     border: 2px solid var(--color-border-strong);
     border-radius: var(--radius-md);
@@ -141,78 +165,161 @@
     transition: all var(--transition-fast);
     text-align: left;
     width: 100%;
+    min-height: 100px;
+    position: relative;
+    overflow: hidden;
 }
 
-.attack-button:hover:not(:disabled) {
+.attack-card:hover:not(:disabled) {
     border-color: var(--color-cherry-rose);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.attack-button--disabled {
-    opacity: 0.4;
+.attack-card--disabled {
+    opacity: 0.5;
     cursor: not-allowed;
+    /* Technically clickable for shake, but indicate disabled */
+    background: var(--color-bg-primary);
 }
 
-.attack-button--selected {
+.attack-card--selected {
     border-color: var(--color-honeydew);
-    background: rgba(223, 248, 235, 0.1);
+    background: rgba(223, 248, 235, 0.05);
+    box-shadow: 0 0 0 2px rgba(223, 248, 235, 0.2);
 }
 
-.attack-button--special {
+.attack-card--special {
     border-color: rgba(158, 25, 70, 0.5);
-    background: rgba(158, 25, 70, 0.1);
 }
 
-.attack-button--special:hover:not(:disabled) {
+.attack-card--special:hover:not(:disabled) {
     border-color: var(--color-cherry-rose);
 }
 
-.attack-button__header {
+/* Shake animation for invalid click */
+.attack-card--shake {
+    animation: shake-card 0.4s ease-in-out;
+    border-color: var(--color-cherry-rose);
+}
+
+@keyframes shake-card {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    20% {
+        transform: translateX(-4px);
+    }
+
+    40% {
+        transform: translateX(4px);
+    }
+
+    60% {
+        transform: translateX(-4px);
+    }
+
+    80% {
+        transform: translateX(4px);
+    }
+}
+
+.attack-card__header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2px;
+    align-items: flex-start;
+    margin-bottom: var(--space-2);
 }
 
-.attack-button__name {
+.attack-card__cost-badge {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    background: rgba(158, 25, 70, 0.15);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    color: var(--color-cherry-rose);
+}
+
+.attack-card__ap {
+    font-family: var(--font-display);
+    font-size: var(--font-size-lg);
+    line-height: 1;
+}
+
+.attack-card__ap-label {
+    font-family: var(--font-sans);
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.attack-card__speed {
+    font-size: var(--font-size-sm);
+}
+
+.attack-card__body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.attack-card__name {
     font-family: var(--font-display);
     font-size: var(--font-size-base);
     color: var(--color-text-primary);
+    line-height: 1.2;
 }
 
-.attack-button__cost {
-    font-family: var(--font-sans);
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-cherry-rose);
-    background: rgba(158, 25, 70, 0.2);
-    padding: 2px 6px;
-    border-radius: var(--radius-sm);
-}
-
-.attack-button__details {
+.attack-card__stats {
     display: flex;
     gap: var(--space-2);
-    flex-wrap: wrap;
+    margin-top: auto;
+    /* Push to bottom of body if needed */
 }
 
-.attack-button__damage {
+.attack-card__stat {
     font-family: var(--font-sans);
-    font-size: var(--font-size-xs);
-    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: bold;
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
 }
 
-.attack-button__effect {
-    font-family: var(--font-sans);
-    font-size: var(--font-size-xs);
+.attack-card__stat--dmg {
+    color: var(--color-icon-inactive);
+    /* Grey/White ish */
+}
+
+.attack-card__stat--heal {
     color: var(--color-honeydew);
 }
 
-.attack-button__source {
+.attack-card__stat-label {
+    font-size: 10px;
+    color: var(--color-text-muted);
+    font-weight: normal;
+}
+
+.attack-card__effect {
     font-family: var(--font-sans);
     font-size: var(--font-size-xs);
+    color: var(--color-honeydew);
+    margin-top: 2px;
+}
+
+.attack-card__footer {
+    margin-top: var(--space-2);
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--color-border-default);
+    font-family: var(--font-sans);
+    font-size: 10px;
     color: var(--color-dusty-taupe);
-    margin-left: auto;
+    text-align: right;
 }
 
 /* ================================
@@ -226,12 +333,17 @@
     padding: var(--space-3);
     background: var(--color-bg-secondary);
     border-radius: var(--radius-lg);
+    flex: 1;
+    /* Fill remaining height */
+    overflow: hidden;
+    /* For scrolling lists */
 }
 
 .attack-selector__queue {
     background: var(--color-bg-primary);
     border-radius: var(--radius-md);
     padding: var(--space-2);
+    flex-shrink: 0;
 }
 
 .attack-selector__queue-header {
@@ -305,8 +417,10 @@
 
 .attack-selector__available {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: var(--space-2);
+    overflow-y: auto;
+    padding-right: var(--space-1);
 }
 
 .attack-selector__execute {
@@ -319,6 +433,7 @@
     font-size: var(--font-size-lg);
     cursor: pointer;
     transition: all var(--transition-fast);
+    flex-shrink: 0;
 }
 
 .attack-selector__execute:hover:not(:disabled) {
@@ -342,10 +457,12 @@
     padding: var(--space-2);
     background: var(--color-bg-primary);
     border-radius: var(--radius-md);
-    max-height: 160px;
+    max-height: 100px;
+    /* Reduced to give space for selectors */
     overflow-y: auto;
     font-family: var(--font-sans);
     font-size: var(--font-size-xs);
+    flex-shrink: 0;
 }
 
 .combat-log__entry {
@@ -377,15 +494,18 @@
 .combat-screen {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: 100vh;
+    max-height: 100vh;
     padding: var(--space-4);
-    gap: var(--space-4);
+    gap: var(--space-3);
+    overflow: hidden;
 }
 
 .combat-screen__header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .combat-screen__turn {
@@ -402,6 +522,7 @@
     padding: var(--space-4);
     background: var(--color-bg-secondary);
     border-radius: var(--radius-lg);
+    flex-shrink: 0;
 }
 
 .combat-screen__player,
@@ -438,7 +559,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: rgba(2, 1, 34, 0.9);
+    background: rgba(2, 1, 34, 0.95);
     z-index: 100;
 }
 

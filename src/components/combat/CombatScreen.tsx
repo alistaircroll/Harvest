@@ -5,12 +5,27 @@
  * Click on body parts to queue all attacks from that part.
  */
 
+import { useState } from 'react';
 import type { PlayerCreature, WildCreature, SelectedAttack } from '../../types';
 import { useCombat } from '../../hooks/useCombat';
-import { HPBar, APDisplay, CombatLog } from './CombatUI';
+import { HPBar, APDisplay, CombatLog, AttackSelector } from './CombatUI';
 import { CombatCreatureDisplay } from './CombatCreatureDisplay';
 import { getAnimalDisplayName } from '../../utils/creatures';
 import './combat.css';
+
+// Import silhouette images
+const silhouetteImages: Partial<Record<string, string>> = {};
+const silhouetteModules = import.meta.glob<{ default: string }>(
+    '../../assets/silhouettes/*.png',
+    { eager: true }
+);
+
+for (const path of Object.keys(silhouetteModules)) {
+    const filename = path.split('/').pop()?.replace('.png', '').replace('silhouette-', '');
+    if (filename) {
+        silhouetteImages[filename] = silhouetteModules[path].default;
+    }
+}
 
 interface CombatScreenProps {
     playerCreature: PlayerCreature;
@@ -30,6 +45,8 @@ export function CombatScreen({
     onDefeat,
     onFlee
 }: CombatScreenProps) {
+    const [apShake, setApShake] = useState(false);
+
     const {
         state,
         phase,
@@ -38,8 +55,10 @@ export function CombatScreen({
         playerAp,
         playerMaxAp,
         enemyMaxAp,
+        availableAttacks,
         selectedAttacks,
         selectedSlots,
+        addAttack,
         addAttacks,
         removeAttack,
         clearAttacks,
@@ -50,9 +69,20 @@ export function CombatScreen({
         wildCreature
     });
 
+    const handleInsufficientAP = () => {
+        setApShake(true);
+        setTimeout(() => setApShake(false), 500);
+    };
+
     // Handle victory/defeat
     const handleContinue = () => {
         if (phase === 'victory') {
+
+            // ... (skipping unchanged lines is hard with replace_file_content if I want to be precise, I'll just target the destructure block first)
+            // Wait, replace_file_content is single block.
+            // I will do two replaces. One for destructure, one for usage.
+            // Actually, I can just replace the destructure block now.
+
             onVictory(wildCreature.lootTable);
         } else {
             onDefeat();
@@ -118,7 +148,7 @@ export function CombatScreen({
                             max={state.playerCreature.maxHp}
                             label="HP"
                         />
-                        <APDisplay current={playerAp} max={playerMaxAp} />
+                        <APDisplay current={playerAp} max={playerMaxAp} shake={apShake} />
                     </div>
                 </div>
 
@@ -132,26 +162,36 @@ export function CombatScreen({
                         disabled={phase !== 'player_turn'}
                     />
                     <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-dusty-taupe)', textAlign: 'center' }}>
-                        Click a body part to attack
+                        Click a body part to queue attacks
                     </p>
                 </div>
 
                 {/* VS */}
                 <div className="combat-screen__versus">VS</div>
 
-                {/* Enemy Creature Visual (placeholder - could add enemy images) */}
+                {/* Enemy Creature Visual */}
                 <div className="combat-screen__creature-visual">
                     <div style={{
-                        width: 100,
-                        height: 100,
-                        background: 'var(--color-bg-elevated)',
-                        borderRadius: 'var(--radius-lg)',
+                        width: 120,
+                        height: 120,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: '3rem'
                     }}>
-                        🐀
+                        {silhouetteImages[wildCreature.type] ? (
+                            <img
+                                src={silhouetteImages[wildCreature.type]}
+                                alt={`${wildCreature.type} silhouette`}
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'contain',
+                                    filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.3))'
+                                }}
+                            />
+                        ) : (
+                            <span style={{ fontSize: '3rem' }}>🐀</span>
+                        )}
                     </div>
                 </div>
 
@@ -174,42 +214,16 @@ export function CombatScreen({
 
             {/* Attack Queue */}
             {phase === 'player_turn' && (
-                <div className="attack-selector">
-                    <div className="attack-selector__queue">
-                        <div className="attack-selector__queue-header">
-                            <span className="attack-selector__queue-title">Attack Queue</span>
-                            {selectedAttacks.length > 0 && (
-                                <button
-                                    className="attack-selector__clear"
-                                    onClick={clearAttacks}
-                                >
-                                    Clear
-                                </button>
-                            )}
-                        </div>
-                        <div className="attack-selector__queue-list">
-                            {selectedAttacks.length === 0 ? (
-                                <span className="attack-selector__empty">Click body parts to queue attacks...</span>
-                            ) : (
-                                selectedAttacks.map((sa, index) => (
-                                    <div key={index} className="attack-selector__queued-attack">
-                                        <span>{sa.attack.name}</span>
-                                        <button onClick={() => removeAttack(index)}>✕</button>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Execute button */}
-                    <button
-                        className="attack-selector__execute"
-                        onClick={executeTurn}
-                        disabled={selectedAttacks.length === 0}
-                    >
-                        Execute Turn ({selectedAttacks.length} attack{selectedAttacks.length !== 1 ? 's' : ''})
-                    </button>
-                </div>
+                <AttackSelector
+                    availableAttacks={availableAttacks}
+                    selectedAttacks={selectedAttacks}
+                    remainingAp={playerAp}
+                    onAttackSelect={addAttack} // addAttacks expects array, but AttackSelector calls with single.
+                    onAttackRemove={removeAttack}
+                    onClear={clearAttacks}
+                    onExecute={executeTurn}
+                    onInsufficientAP={handleInsufficientAP}
+                />
             )}
 
             {/* Combat Log */}

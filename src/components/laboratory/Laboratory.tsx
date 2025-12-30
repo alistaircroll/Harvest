@@ -9,6 +9,7 @@ import { useState, useCallback } from 'react';
 import type { MVPPartSlot, BodyPart, PartSlot } from '../../types';
 import { CreatureDisplay } from '../creature/CreatureDisplay';
 import { FreezerPanel } from './FreezerPanel';
+import { BasicPartsDrawer } from './BasicPartsDrawer';
 import './laboratory.css';
 
 interface LaboratoryProps {
@@ -25,7 +26,10 @@ interface LaboratoryProps {
     /** Called when user wants to go walking */
     onGoWalking: () => void;
     /** Called when user confirms new game */
+    /** Called when user confirms new game */
     onNewGame: () => void;
+    /** Whether creature is in critical state (dead) */
+    isDead?: boolean;
 }
 
 // MVP slots that support swapping
@@ -39,6 +43,7 @@ export function Laboratory({
     onEmptySlot,
     onGoWalking,
     onNewGame,
+    isDead = false,
 }: LaboratoryProps) {
     // Track confirming state for New Game
     const [confirmingNewGame, setConfirmingNewGame] = useState(false);
@@ -51,7 +56,7 @@ export function Laboratory({
     }, [onSwapPart]);
 
     // Handle drop on freezer slot (from creature)
-    const handleFreezerDrop = useCallback((freezerIndex: number, creatureSlot: MVPPartSlot, _creaturePart: BodyPart) => {
+    const handleFreezerDrop = useCallback((freezerIndex: number, creatureSlot: MVPPartSlot) => {
         // If freezer slot has a part, swap; otherwise just move creature part to freezer
         const freezerPart = freezer[freezerIndex];
         if (freezerPart) {
@@ -99,7 +104,21 @@ export function Laboratory({
                     showStats={true}
                     onPartDrop={handleCreatureDrop}
                     isDraggable={true}
+                    showFutureSlots={true}
                 />
+            </section>
+
+            {/* Critical State Warning */}
+            {isDead && (
+                <div className="laboratory__warning">
+                    <h2 className="laboratory__warning-title">⚠️ CRITICAL CONDITION ⚠️</h2>
+                    <p>Creature missing essential limbs! Cannot go walking.</p>
+                </div>
+            )}
+
+            {/* Basic Parts Drawer - unlimited rat parts for recovery */}
+            <section>
+                <BasicPartsDrawer />
             </section>
 
             {/* Freezer Panel with drop targets */}
@@ -112,10 +131,12 @@ export function Laboratory({
             {/* Actions */}
             <section className="laboratory__actions">
                 <button
-                    className="btn btn--primary btn--large"
-                    onClick={onGoWalking}
+                    className={`btn btn--primary btn--large ${isDead ? 'btn--disabled' : ''}`}
+                    onClick={isDead ? undefined : onGoWalking}
+                    disabled={isDead}
+                    title={isDead ? "Must attach limbs to continue" : undefined}
                 >
-                    Go Walking 🚶
+                    {isDead ? 'Recovering...' : 'Go Walking 🚶'}
                 </button>
             </section>
 

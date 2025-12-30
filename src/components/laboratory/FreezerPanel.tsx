@@ -8,7 +8,7 @@
  */
 
 import { useState } from 'react';
-import type { BodyPart, AnimalType, PartType, MVPPartSlot } from '../../types';
+import type { BodyPart, AnimalType, PartType, MVPPartSlot, DragPayload } from '../../types';
 import { getAnimalDisplayName, getPartTypeDisplayName } from '../../utils/creatures';
 import './laboratory.css';
 
@@ -58,12 +58,13 @@ export function FreezerPanel({
 
     const handleDragStart = (e: React.DragEvent, index: number, part: BodyPart) => {
         // Set drag data for freezer->creature drag
-        e.dataTransfer.setData('application/json', JSON.stringify({
+        const payload: DragPayload = {
             source: 'freezer',
             freezerIndex: index,
             partType: part.partType,
             part: part,
-        }));
+        };
+        e.dataTransfer.setData('application/json', JSON.stringify(payload));
         e.dataTransfer.effectAllowed = 'move';
         onDragStart?.(index, part);
     };
@@ -74,18 +75,17 @@ export function FreezerPanel({
     };
 
     // Handle drop from creature onto freezer slot
-    const handleDrop = (e: React.DragEvent, freezerIndex: number) => {
+    const handleDrop = (e: React.DragEvent, index: number) => {
         e.preventDefault();
         setDragOverSlot(null);
 
-        if (!onCreaturePartDrop) return;
-
         try {
-            const data = JSON.parse(e.dataTransfer.getData('application/json'));
-            // Only accept drops from creature (not from other freezer slots)
-            if (data.source === 'creature' && data.creatureSlot && data.part) {
-                onCreaturePartDrop(freezerIndex, data.creatureSlot, data.part);
-            }
+            const data = JSON.parse(e.dataTransfer.getData('application/json')) as DragPayload;
+
+            // Only accept drops from creature
+            if (data.source !== 'creature' || !data.creatureSlot) return;
+
+            onCreaturePartDrop?.(index, data.creatureSlot, data.part);
         } catch {
             // Invalid drop data
         }

@@ -14,7 +14,7 @@ import type {
     AnimalType,
     SelectedAttack
 } from '../types';
-import { torsos, heads, arms, legs, tails, getPartsWithSpecialAbilities } from '../data/bodyParts';
+import { torsos, heads, arms, legs, tails } from '../data/loaders/bodyPartLoader';
 
 // ================================
 // Creature Creation
@@ -353,12 +353,28 @@ export function equipPart(
  * Get 2 random special parts for starter freezer
  */
 export function getStarterFreezerParts(): [BodyPart, BodyPart] {
-    const specials = getPartsWithSpecialAbilities();
+    const specials: BodyPart[] = [];
+
+    // Helper to extract parts with effects
+    const collectSpecials = (parts: Record<string, BodyPart>) => {
+        Object.values(parts).forEach((part) => {
+            if (part && part.attacks && Array.isArray(part.attacks)) {
+                if (part.attacks.some((a) => a.effect !== null)) {
+                    specials.push(part);
+                }
+            }
+        });
+    };
+
+    collectSpecials(heads);
+    collectSpecials(arms);
+    collectSpecials(legs);
+    collectSpecials(tails);
 
     // Shuffle and pick 2
     const shuffled = [...specials].sort(() => Math.random() - 0.5);
 
-    return [shuffled[0], shuffled[1]];
+    return [shuffled[0] || arms.rat, shuffled[1] || legs.rat];
 }
 
 // ================================

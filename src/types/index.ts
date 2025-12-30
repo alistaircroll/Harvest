@@ -28,16 +28,10 @@ export type PartType =
     | 'gill';
 
 export type AnimalType = 'rat' | 'squirrel' | 'cat' | 'dog' | 'skunk';
-export type Biome = 'city' | 'park' | 'pond' | 'forest' | 'beach' | 'mountains' | 'jungle';
+// Biomes - ordered by progression difficulty (defined in biomes.json)
+export type Biome = 'city' | 'woods' | 'pond' | 'beach' | 'jungle';
 
-export type EffectType =
-    | 'dot'           // Damage over time
-    | 'heal'          // Restore HP
-    | 'debuff_defense'// Reduce target defense
-    | 'debuff_ap'     // Reduce target max AP
-    | 'debuff_accuracy' // Reduce target accuracy
-    | 'buff_defense'  // Increase own defense
-    | 'buff_evasion'; // Chance to dodge
+// Note: EffectType is now defined in the Effect System section below (line ~91)
 
 // All possible limb positions (future-proofed for 8 limbs)
 export type LimbPosition = 1 | 2 | 3 | 4;
@@ -87,28 +81,152 @@ export type LegacyPartSlot =
 // Effect System
 // ================================
 
+// Comprehensive effect taxonomy (144 types across 12 categories)
+export type EffectType =
+    // 1. Direct Damage & Healing
+    | 'damage' | 'heal' | 'true_damage' | 'lifesteal' | 'recoil' | 'execute' | 'overkill'
+    | 'dot' | 'hot' | 'decay' | 'surge'
+    // 2. AP Manipulation
+    | 'buff_ap' | 'debuff_ap' | 'ap_steal' | 'ap_refund' | 'ap_lock' | 'ap_burst'
+    | 'reduce_cost' | 'increase_cost' | 'free_attack' | 'double_cost'
+    // 3. Initiative & Speed
+    | 'buff_speed' | 'debuff_speed' | 'haste' | 'delay' | 'time_stop' | 'quicken'
+    | 'extra_turn' | 'skip_turn' | 'swap_turns' | 'rewind'
+    // 4. Defense & Mitigation
+    | 'buff_defense' | 'debuff_defense' | 'shield' | 'barrier' | 'reflect' | 'thorns'
+    | 'buff_evasion' | 'debuff_evasion' | 'parry' | 'counter' | 'phase' | 'invulnerable'
+    // 5. Accuracy & Targeting
+    | 'buff_accuracy' | 'debuff_accuracy' | 'guaranteed_hit' | 'guaranteed_miss'
+    | 'buff_crit_chance' | 'buff_crit_damage' | 'guaranteed_crit' | 'crit_immunity'
+    | 'cleave' | 'splash' | 'chain' | 'pierce'
+    // 6. Status Conditions
+    | 'stun' | 'freeze' | 'sleep' | 'charm' | 'confuse' | 'taunt'
+    | 'poison' | 'bleed' | 'burn' | 'curse' | 'silence' | 'disarm'
+    | 'disable_part' | 'cripple' | 'mute' | 'blind'
+    // 7. Resource Manipulation
+    | 'max_hp_buff' | 'max_hp_debuff' | 'hp_swap' | 'hp_link' | 'hp_drain'
+    | 'transform' | 'mimic' | 'steal_part' | 'sacrifice'
+    // 8. Combo & Synergy
+    | 'on_hit' | 'on_miss' | 'on_crit' | 'on_kill' | 'on_damaged' | 'on_heal'
+    | 'mark' | 'expose' | 'setup' | 'finisher' | 'combo_bonus' | 'element_react'
+    // 9. Stacking & Duration
+    | 'stack_decay' | 'stack_consume' | 'stack_transfer'
+    | 'extend' | 'shorten' | 'permanent' | 'refresh' | 'cleanse' | 'purge'
+    // 10. Conditional
+    | 'low_hp_bonus' | 'high_hp_bonus' | 'desperation' | 'bloodlust'
+    | 'first_turn' | 'last_turn' | 'odd_turns' | 'even_turns'
+    | 'if_part_alive' | 'if_part_dead' | 'synergy' | 'anti_synergy'
+    // 11. Unique Mechanics
+    | 'evolve' | 'devolve' | 'mutate' | 'adapt'
+    | 'gamble' | 'coin_flip' | 'dice_roll' | 'chaos'
+    | 'hp_for_ap' | 'ap_for_hp' | 'hp_for_damage' | 'damage_for_heal'
+    | 'swap_position' | 'push' | 'pull' | 'lock_position'
+    // 12. Meta Effects
+    | 'amplify' | 'dampen' | 'reverse' | 'copy_effect' | 'steal_effect' | 'redirect'
+    | 'immune_dot' | 'immune_cc' | 'immune_debuff' | 'resist_all' | 'absorb_effect'
+    | 'aura_damage' | 'aura_defense' | 'aura_speed' | 'aura_heal' | 'aura_debuff';
+
+export type TriggerType =
+    | 'instant'          // Happens immediately
+    | 'on_hit'           // When attack lands
+    | 'on_miss'          // When attack misses
+    | 'on_crit'          // On critical hit
+    | 'on_kill'          // When defeating opponent
+    | 'on_damaged'       // When taking damage
+    | 'on_heal'          // When healing
+    | 'on_turn_start'    // Start of turn
+    | 'on_turn_end'      // End of turn
+    | 'on_part_destroyed'; // When part is destroyed
+
+export type TargetType =
+    | 'self'             // Caster
+    | 'opponent'         // Enemy
+    | 'all_self'         // All own parts
+    | 'all_opponent'     // All enemy parts
+    | 'random'           // Random target
+    | 'specific_part';   // Specific part type
+
+export type ScalingType =
+    | 'flat'             // Fixed value
+    | 'percent_hp'       // % of max HP
+    | 'percent_missing'  // % of missing HP
+    | 'per_stack'        // Multiplied by stacks
+    | 'per_turn';        // Increases each turn
+
+export interface Condition {
+    targetHpBelow?: number;      // Target HP < X%
+    targetHpAbove?: number;      // Target HP > X%
+    selfHpBelow?: number;        // Self HP < X%
+    selfHpAbove?: number;        // Self HP > X%
+    hasEffect?: EffectType;      // Target has effect
+    lacksEffect?: EffectType;    // Target lacks effect
+    partAlive?: PartType;        // Specific part exists
+    partDead?: PartType;         // Specific part destroyed
+    turnNumber?: number;         // Specific turn
+    oddTurn?: boolean;           // Odd turns only
+    evenTurn?: boolean;          // Even turns only
+}
+
 export interface Effect {
+    // Core properties
     type: EffectType;
-    value: number;
-    duration?: number;      // Number of turns (undefined for instant effects like heal)
-    stacks?: boolean;       // Whether multiple applications stack
+    value: number;              // Magnitude (damage, healing, %, etc.)
+    duration?: number;          // Turns (undefined = instant)
+
+    // Stacking
+    stacks?: boolean;           // Can stack?
+    maxStacks?: number;         // Stack limit
+
+    // Triggers & Conditions
+    trigger?: TriggerType;      // When effect activates
+    condition?: Condition;      // Requirement to activate
+
+    // Targeting
+    target?: TargetType;        // Who is affected
+    partType?: PartType;        // Specific part type
+
+    // Modifiers
+    scaling?: ScalingType;      // How value scales
+    chance?: number;            // Probability (0-100)
+
+    // Combos
+    requires?: EffectType[];    // Needs these effects present
+    grants?: Effect[];          // Triggers additional effects
+    consumes?: EffectType[];    // Removes these effects
+
+    // Meta
+    priority?: number;          // Execution order
+    dispellable?: boolean;      // Can be cleansed?
+    transferable?: boolean;     // Can be moved to other parts?
 }
 
 export interface ActiveEffect extends Effect {
     remainingDuration: number;
-    sourceId?: string;      // Track source for stacking calculations
+    sourceId?: string;          // Track source for stacking calculations
+    currentStacks?: number;     // Current stack count
 }
+
 
 // ================================
 // Attack System
 // ================================
 
+export interface AttackTutorial {
+    bodyPart: string;
+    headline: string;
+    description: string;
+}
+
 export interface Attack {
+    id?: string;            // Unique identifier from data file
     name: string;
     apCost: number;
     damage: number;
     effect: Effect | null;
+    speed: number;          // Base speed for initiative (0-100, higher = faster)
     requiresBothLegs?: boolean;  // Cat's Pounce requires both legs
+    description?: string;   // Human-readable description
+    tutorial?: AttackTutorial;  // First-encounter tutorial data
 }
 
 export interface SelectedAttack {
@@ -137,6 +255,7 @@ export interface TorsoBodyPart extends BodyPartBase {
 export interface HeadBodyPart extends BodyPartBase {
     partType: 'head';
     hpBonus: number;
+    speedBonus: number;     // Initiative bonus applied to all attacks (0-20)
     // Future: hasHornSlots?: boolean;
     // Future: hasAntennaSlots?: boolean;
     // Future: hasGillSlots?: boolean;
@@ -295,8 +414,18 @@ export interface CombatState {
     enemyAp: number;
     enemyAttackQueue: Attack[];
 
+    // Initiative System
+    initiativeQueue: InitiativeEntry[];
+    currentInitiativeIndex: number;
+
     // Combat log
     log: CombatLogEntry[];
+}
+
+export interface InitiativeEntry {
+    actorId: 'player' | 'enemy';
+    speed: number;
+    attack: SelectedAttack | Attack;
 }
 
 export interface CombatLogEntry {
@@ -410,6 +539,22 @@ export const FUTURE_ATTACHMENT_SLOTS: PartSlot[] = [
 
 export const BASE_PLAYER_AP = 6;
 export const BASE_PLAYER_HP = 10;  // Added to torso + head HP
-export const FREEZER_SLOTS = 3;
+export const FREEZER_SLOTS = 3;    // Single source of truth for freezer size
 export const DEFAULT_DIFFICULTY = 1.0;
 export const MAX_LIMBS_PER_SIDE = 4;  // Future: up to 4 arms + 4 legs per side
+
+// ================================
+// Drag and Drop
+// ================================
+
+export type DragSource = 'freezer' | 'creature' | 'loot';
+
+export interface DragPayload {
+    source: DragSource;
+    partType: PartType;
+    part: BodyPart;
+    // If source is freezer, this is the index
+    freezerIndex?: number;
+    // If source is creature, this is the slot
+    creatureSlot?: MVPPartSlot;
+}

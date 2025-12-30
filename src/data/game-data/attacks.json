@@ -1,0 +1,573 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "version": "2.0.0",
+    "attacks": {
+        "nibble": {
+            "id": "nibble",
+            "name": "Nibble",
+            "apCost": 1,
+            "damage": 4,
+            "speed": 65,
+            "effect": null,
+            "description": "A quick bite attack",
+            "tags": [
+                "quick",
+                "bite",
+                "rodent"
+            ],
+            "category": "basic"
+        },
+        "chitter": {
+            "id": "chitter",
+            "name": "Chitter",
+            "apCost": 1,
+            "damage": 3,
+            "speed": 70,
+            "effect": {
+                "type": "debuff_accuracy",
+                "value": 10,
+                "duration": 1,
+                "description": "Distracting noise reduces enemy accuracy"
+            },
+            "description": "Distracting chatter that reduces accuracy",
+            "tags": [
+                "quick",
+                "sound",
+                "rodent",
+                "debuff"
+            ],
+            "category": "control",
+            "tutorial": {
+                "bodyPart": "head",
+                "headline": "Annoying chatter!",
+                "description": "The squirrel's chittering noise makes it harder for you to aim. Your attacks may miss for 1 turn!"
+            }
+        },
+        "bite": {
+            "id": "bite",
+            "name": "Bite",
+            "apCost": 2,
+            "damage": 8,
+            "speed": 45,
+            "effect": null,
+            "description": "A powerful bite",
+            "tags": [
+                "medium",
+                "bite",
+                "feline"
+            ],
+            "category": "basic"
+        },
+        "bite_dog": {
+            "id": "bite_dog",
+            "name": "Bite",
+            "apCost": 2,
+            "damage": 7,
+            "speed": 40,
+            "effect": null,
+            "description": "A sturdy bite",
+            "tags": [
+                "medium",
+                "bite",
+                "canine"
+            ],
+            "category": "basic"
+        },
+        "bite_skunk": {
+            "id": "bite_skunk",
+            "name": "Bite",
+            "apCost": 1,
+            "damage": 5,
+            "speed": 60,
+            "effect": null,
+            "description": "A defensive bite",
+            "tags": [
+                "quick",
+                "bite"
+            ],
+            "category": "basic"
+        },
+        "hiss": {
+            "id": "hiss",
+            "name": "Hiss",
+            "apCost": 1,
+            "damage": 0,
+            "speed": 65,
+            "effect": {
+                "type": "debuff_defense",
+                "value": 1,
+                "duration": 2,
+                "description": "Intimidating hiss reduces defense"
+            },
+            "description": "Intimidating hiss that reduces defense",
+            "tags": [
+                "debuff",
+                "sound",
+                "feline"
+            ],
+            "category": "control",
+            "tutorial": {
+                "bodyPart": "head",
+                "headline": "Intimidating hiss!",
+                "description": "The cat's menacing hiss lowers your defense for 2 turns, making you take more damage from attacks."
+            }
+        },
+        "lick_it_better": {
+            "id": "lick_it_better",
+            "name": "Lick It Better",
+            "apCost": 2,
+            "damage": 0,
+            "speed": 35,
+            "effect": {
+                "type": "heal",
+                "value": 8,
+                "target": "self",
+                "description": "Healing lick restores HP"
+            },
+            "description": "Healing lick",
+            "tags": [
+                "heal",
+                "support",
+                "canine"
+            ],
+            "category": "support",
+            "tutorial": {
+                "bodyPart": "head",
+                "headline": "Self-healing!",
+                "description": "The dog can lick its wounds to heal 8 HP. Try to deal damage faster than it can heal!"
+            }
+        },
+        "scratch": {
+            "id": "scratch",
+            "name": "Scratch",
+            "apCost": 1,
+            "damage": 5,
+            "speed": 65,
+            "effect": null,
+            "description": "Quick scratch attack",
+            "tags": [
+                "quick",
+                "claw",
+                "rodent"
+            ],
+            "category": "basic"
+        },
+        "scratch_squirrel": {
+            "id": "scratch_squirrel",
+            "name": "Scratch",
+            "apCost": 1,
+            "damage": 5,
+            "speed": 70,
+            "effect": null,
+            "description": "Fast scratch",
+            "tags": [
+                "quick",
+                "claw",
+                "rodent"
+            ],
+            "category": "basic"
+        },
+        "swipe": {
+            "id": "swipe",
+            "name": "Swipe",
+            "apCost": 1,
+            "damage": 6,
+            "speed": 70,
+            "effect": null,
+            "description": "Swift claw swipe",
+            "tags": [
+                "quick",
+                "claw",
+                "feline"
+            ],
+            "category": "basic"
+        },
+        "cat_scratch_fever": {
+            "id": "cat_scratch_fever",
+            "name": "Cat Scratch Fever",
+            "apCost": 2,
+            "damage": 4,
+            "speed": 50,
+            "effect": {
+                "type": "bleed",
+                "value": 3,
+                "duration": 3,
+                "stacks": true,
+                "maxStacks": 5,
+                "description": "Inflicts stacking bleed damage"
+            },
+            "description": "Inflicts bleeding damage over time",
+            "tags": [
+                "special",
+                "dot",
+                "feline"
+            ],
+            "category": "dot",
+            "tutorial": {
+                "bodyPart": "arms",
+                "headline": "Watch out for those claws!",
+                "description": "Cat Scratch Fever inflicts bleeding that deals 3 damage per turn for 3 turns. It can stack up to 5 times!"
+            }
+        },
+        "paw_slap": {
+            "id": "paw_slap",
+            "name": "Paw Slap",
+            "apCost": 1,
+            "damage": 5,
+            "speed": 60,
+            "effect": null,
+            "description": "Heavy paw strike",
+            "tags": [
+                "quick",
+                "blunt",
+                "canine"
+            ],
+            "category": "basic"
+        },
+        "claw": {
+            "id": "claw",
+            "name": "Claw",
+            "apCost": 1,
+            "damage": 5,
+            "speed": 65,
+            "effect": null,
+            "description": "Sharp claw attack",
+            "tags": [
+                "quick",
+                "claw"
+            ],
+            "category": "basic"
+        },
+        "kick": {
+            "id": "kick",
+            "name": "Kick",
+            "apCost": 1,
+            "damage": 4,
+            "speed": 60,
+            "effect": null,
+            "description": "Basic kick",
+            "tags": [
+                "quick",
+                "blunt",
+                "rodent"
+            ],
+            "category": "basic"
+        },
+        "kick_rat": {
+            "id": "kick_rat",
+            "name": "Kick",
+            "apCost": 1,
+            "damage": 4,
+            "speed": 60,
+            "effect": null,
+            "description": "Scrappy rat kick",
+            "tags": [
+                "quick",
+                "blunt",
+                "rodent"
+            ],
+            "category": "basic"
+        },
+        "kick_skunk": {
+            "id": "kick_skunk",
+            "name": "Kick",
+            "apCost": 1,
+            "damage": 4,
+            "speed": 60,
+            "effect": null,
+            "description": "Defensive skunk kick",
+            "tags": [
+                "quick",
+                "blunt"
+            ],
+            "category": "basic"
+        },
+        "kick_squirrel": {
+            "id": "kick_squirrel",
+            "name": "Kick",
+            "apCost": 1,
+            "damage": 4,
+            "speed": 65,
+            "effect": null,
+            "description": "Agile kick",
+            "tags": [
+                "quick",
+                "blunt",
+                "rodent"
+            ],
+            "category": "basic"
+        },
+        "kick_cat": {
+            "id": "kick_cat",
+            "name": "Kick",
+            "apCost": 1,
+            "damage": 5,
+            "speed": 65,
+            "effect": null,
+            "description": "Powerful kick",
+            "tags": [
+                "quick",
+                "blunt",
+                "feline"
+            ],
+            "category": "basic"
+        },
+        "kick_dog": {
+            "id": "kick_dog",
+            "name": "Kick",
+            "apCost": 1,
+            "damage": 5,
+            "speed": 55,
+            "effect": null,
+            "description": "Heavy kick",
+            "tags": [
+                "quick",
+                "blunt",
+                "canine"
+            ],
+            "category": "basic"
+        },
+        "climb_a_tree": {
+            "id": "climb_a_tree",
+            "name": "Climb a Tree",
+            "apCost": 2,
+            "damage": 0,
+            "speed": 55,
+            "effect": {
+                "type": "buff_evasion",
+                "value": 50,
+                "duration": 1,
+                "target": "self",
+                "description": "Climb high to avoid attacks"
+            },
+            "description": "Climb to avoid attacks",
+            "tags": [
+                "buff",
+                "evasion",
+                "rodent"
+            ],
+            "category": "defensive",
+            "tutorial": {
+                "bodyPart": "legs",
+                "headline": "Quick escape!",
+                "description": "The squirrel can climb a tree to gain 50% evasion for 1 turn. Half your attacks will miss!"
+            }
+        },
+        "pounce": {
+            "id": "pounce",
+            "name": "Pounce",
+            "apCost": 2,
+            "damage": 10,
+            "speed": 55,
+            "effect": {
+                "type": "execute",
+                "value": 5,
+                "condition": {
+                    "targetHpBelow": 30
+                },
+                "description": "Bonus damage if target below 30% HP"
+            },
+            "requiresBothLegs": true,
+            "description": "Powerful leap attack with execute (requires both legs)",
+            "tags": [
+                "special",
+                "blunt",
+                "feline",
+                "execute"
+            ],
+            "category": "finisher",
+            "tutorial": {
+                "bodyPart": "legs",
+                "headline": "Deadly pounce!",
+                "description": "Pounce deals 10 damage, but if your HP is below 30%, it deals bonus execute damage. Stay healthy!"
+            }
+        },
+        "tail_whip": {
+            "id": "tail_whip",
+            "name": "Tail Whip",
+            "apCost": 1,
+            "damage": 3,
+            "speed": 65,
+            "effect": null,
+            "description": "Quick tail strike",
+            "tags": [
+                "quick",
+                "blunt",
+                "rodent"
+            ],
+            "category": "basic"
+        },
+        "fluffy_distract": {
+            "id": "fluffy_distract",
+            "name": "Fluffy Distract",
+            "apCost": 1,
+            "damage": 2,
+            "speed": 70,
+            "effect": {
+                "type": "mark",
+                "value": 0,
+                "duration": 2,
+                "description": "Marks target for combo attacks"
+            },
+            "description": "Distracting fluffy tail marks target",
+            "tags": [
+                "quick",
+                "distract",
+                "rodent",
+                "combo"
+            ],
+            "category": "setup",
+            "tutorial": {
+                "bodyPart": "tail",
+                "headline": "Distracting fluff!",
+                "description": "The squirrel's fluffy tail marks you for combo attacks. Marked targets take bonus damage from follow-up hits!"
+            }
+        },
+        "distract": {
+            "id": "distract",
+            "name": "Distract",
+            "apCost": 1,
+            "damage": 0,
+            "speed": 70,
+            "effect": {
+                "type": "debuff_accuracy",
+                "value": 1,
+                "duration": 1,
+                "description": "Reduces enemy accuracy"
+            },
+            "description": "Reduces enemy accuracy",
+            "tags": [
+                "debuff",
+                "distract",
+                "rodent"
+            ],
+            "category": "control"
+        },
+        "tail_whip_cat": {
+            "id": "tail_whip_cat",
+            "name": "Tail Whip",
+            "apCost": 1,
+            "damage": 4,
+            "speed": 70,
+            "effect": null,
+            "description": "Swift tail strike",
+            "tags": [
+                "quick",
+                "blunt",
+                "feline"
+            ],
+            "category": "basic"
+        },
+        "tail_wag": {
+            "id": "tail_wag",
+            "name": "Tail Wag",
+            "apCost": 1,
+            "damage": 3,
+            "speed": 60,
+            "effect": null,
+            "description": "Friendly tail wag",
+            "tags": [
+                "quick",
+                "blunt",
+                "canine"
+            ],
+            "category": "basic"
+        },
+        "happy_wag": {
+            "id": "happy_wag",
+            "name": "Happy Wag",
+            "apCost": 1,
+            "damage": 0,
+            "speed": 60,
+            "effect": {
+                "type": "buff_defense",
+                "value": 1,
+                "duration": 2,
+                "target": "self",
+                "description": "Boosts morale and defense"
+            },
+            "description": "Boosts morale and defense",
+            "tags": [
+                "buff",
+                "support",
+                "canine"
+            ],
+            "category": "defensive",
+            "tutorial": {
+                "bodyPart": "tail",
+                "headline": "Defensive wag!",
+                "description": "The dog's happy tail wag boosts its defense for 2 turns. Your attacks will deal less damage!"
+            }
+        },
+        "tail_slap": {
+            "id": "tail_slap",
+            "name": "Tail Slap",
+            "apCost": 1,
+            "damage": 3,
+            "speed": 65,
+            "effect": null,
+            "description": "Defensive tail strike",
+            "tags": [
+                "quick",
+                "blunt"
+            ],
+            "category": "basic"
+        },
+        "stinky_spray": {
+            "id": "stinky_spray",
+            "name": "Stinky Spray",
+            "apCost": 3,
+            "damage": 0,
+            "speed": 30,
+            "effect": {
+                "type": "debuff_ap",
+                "value": 2,
+                "duration": 2,
+                "stacks": false,
+                "target": "opponent",
+                "description": "Noxious spray drains AP"
+            },
+            "description": "Noxious spray that drains AP",
+            "tags": [
+                "special",
+                "debuff"
+            ],
+            "category": "control",
+            "tutorial": {
+                "bodyPart": "tail",
+                "headline": "Noxious fumes!",
+                "description": "Stinky Spray drains 2 of your Action Points for 2 turns. You'll have fewer attacks available!"
+            }
+        }
+    },
+    "categories": {
+        "basic": {
+            "description": "Standard attacks with no special effects",
+            "color": "#888888"
+        },
+        "dot": {
+            "description": "Damage over time effects (poison, bleed, burn)",
+            "color": "#8B4513"
+        },
+        "control": {
+            "description": "Debuffs and crowd control",
+            "color": "#4169E1"
+        },
+        "defensive": {
+            "description": "Buffs and defensive abilities",
+            "color": "#228B22"
+        },
+        "support": {
+            "description": "Healing and ally buffs",
+            "color": "#FFD700"
+        },
+        "setup": {
+            "description": "Combo enablers and marks",
+            "color": "#9370DB"
+        },
+        "finisher": {
+            "description": "Execute and high-damage finishers",
+            "color": "#DC143C"
+        }
+    }
+}

@@ -9,8 +9,111 @@ import type {
     WildCreature,
     ActiveEffect,
     SelectedAttack,
-    CombatLogEntry
+    CombatLogEntry,
+    PlayerCreature,
+    Condition,
+    Effect
 } from '../types';
+
+// ================================
+// Context & Conditions
+// ================================
+
+export interface EffectContext {
+    targetHp?: number;
+    targetMaxHp?: number;
+    targetEffects?: ActiveEffect[];
+    selfHp?: number;
+    selfMaxHp?: number;
+    selfEffects?: ActiveEffect[];
+    turn?: number;
+}
+
+/**
+ * Check if a condition is met
+ */
+export function checkCondition(condition: Condition | undefined, context: EffectContext): boolean {
+    if (!condition) return true;
+
+    if (condition.targetHpBelow !== undefined && context.targetHp !== undefined && context.targetMaxHp) {
+        if ((context.targetHp / context.targetMaxHp) * 100 >= condition.targetHpBelow) return false;
+    }
+    if (condition.targetHpAbove !== undefined && context.targetHp !== undefined && context.targetMaxHp) {
+        if ((context.targetHp / context.targetMaxHp) * 100 <= condition.targetHpAbove) return false;
+    }
+    if (condition.selfHpBelow !== undefined && context.selfHp !== undefined && context.selfMaxHp) {
+        if ((context.selfHp / context.selfMaxHp) * 100 >= condition.selfHpBelow) return false;
+    }
+    if (condition.turnNumber !== undefined && context.turn !== undefined) {
+        if (context.turn !== condition.turnNumber) return false;
+    }
+    if (condition.oddTurn && context.turn !== undefined) {
+        if (context.turn % 2 === 0) return false;
+    }
+    if (condition.evenTurn && context.turn !== undefined) {
+        if (context.turn % 2 !== 0) return false;
+    }
+    // Condition: hasEffect / lacksEffect
+    if (condition.hasEffect && context.targetEffects) {
+        if (!context.targetEffects.some(e => e.type === condition.hasEffect)) return false;
+    }
+    if (condition.lacksEffect && context.targetEffects) {
+        if (context.targetEffects.some(e => e.type === condition.lacksEffect)) return false;
+    }
+
+    return true;
+}
+
+// ================================
+// Initiative & Speed
+// ================================
+
+/**
+ * Calculate effective speed including buffs/debuffs
+ */
+export function getEffectiveSpeed(
+    baseSpeed: number,
+    activeEffects: ActiveEffect[]
+): number {
+    let speed = baseSpeed;
+
+    for (const effect of activeEffects) {
+        if (effect.type === 'buff_speed' || effect.type === 'haste') {
+            speed += effect.value;
+        }
+        if (effect.type === 'debuff_speed') {
+            speed -= effect.value;
+        }
+    }
+
+    return Math.max(0, speed);
+}
+
+/**
+ * Calculate initiative for an attack
+ * 
+ * Formula: Attack Speed + Head Speed Bonus (player only) + Active Effects ± Random(0-10)
+ * Higher initiative = acts first in the turn queue.
+ */
+export function calculateInitiative(
+    attack: Attack,
+    creature: PlayerCreature | WildCreature
+): number {
+    let speed = attack.speed;
+
+    // Add head bonus (if player creature)
+    if ('slots' in creature && creature.slots.head) {
+        speed += creature.slots.head.speedBonus;
+    }
+
+    // Add active effects
+    speed = getEffectiveSpeed(speed, creature.activeEffects);
+
+    // Random variance to prevent ties
+    speed += Math.floor(Math.random() * 11); // 0-10
+
+    return speed;
+}
 
 // ================================
 // Damage Calculation
@@ -181,8 +284,77 @@ export function applyEffect(
 export interface AttackResult {
     damage: number;
     hit: boolean;
-    effectApplied: ActiveEffect | null;
     healAmount: number;
+    effects: ActiveEffect[];
+    apChange: number;
+}
+
+/**
+ * Evaluate a single effect
+ */
+export function evaluateEffect(effect: Effect, context: EffectContext): {
+    damage?: number;
+    heal?: number;
+    apChange?: number;
+    newEffects: ActiveEffect[];
+} {
+    // Check chance
+    if (effect.chance !== undefined && Math.random() * 100 > effect.chance) {
+        return { newEffects: [] };
+    }
+
+    // Check condition
+    if (!checkCondition(effect.condition, context)) {
+        return { newEffects: [] };
+    }
+
+    const result: {
+        damage?: number;
+        heal?: number;
+        apChange?: number;
+        newEffects: ActiveEffect[];
+    } = { newEffects: [] };
+
+    // Handle immediate effects vs duration effects
+    switch (effect.type) {
+        case 'damage':
+        case 'true_damage':
+        case 'overkill':
+            result.damage = effect.value;
+            break;
+        case 'heal':
+        case 'hot': // immediate part if any? usually HOT is duration
+            if (!effect.duration) result.heal = effect.value;
+            else result.newEffects.push({ ...effect, remainingDuration: effect.duration!, currentStacks: 1 });
+            break;
+        case 'ap_steal':
+        case 'ap_refund':
+        case 'ap_burst':
+            result.apChange = effect.value;
+            break;
+        case 'debuff_ap': // immediate reduction?
+            // Usually this is "reduce target AP" which is immediate state change,
+            // OR "reduce max AP" which is duration.
+            // Taxonomy says Modifiers: 'debuff_ap'. Usually duration.
+            if (effect.duration) {
+                result.newEffects.push({ ...effect, remainingDuration: effect.duration!, currentStacks: 1 });
+            } else {
+                result.apChange = -effect.value;
+            }
+            break;
+        default:
+            // Default to duration effect if duration exists
+            if (effect.duration) {
+                result.newEffects.push({
+                    ...effect,
+                    remainingDuration: effect.duration,
+                    currentStacks: 1
+                });
+            }
+            break;
+    }
+
+    return result;
 }
 
 /**
@@ -194,13 +366,18 @@ export function resolveAttack(
     targetDefense: number,
     targetEffects: ActiveEffect[],
     log: CombatLogEntry[],
-    turn: number
+    turn: number,
+    // Optional context data if available (e.g. self HP)
+    attackerContext?: { hp: number; maxHp: number; effects: ActiveEffect[] },
+    targetHp?: number,
+    targetMaxHp?: number
 ): AttackResult {
     const result: AttackResult = {
         damage: 0,
         hit: true,
-        effectApplied: null,
-        healAmount: 0
+        healAmount: 0,
+        effects: [],
+        apChange: 0
     };
 
     // Check if attack hits
@@ -214,7 +391,7 @@ export function resolveAttack(
         return result;
     }
 
-    // Calculate and apply damage
+    // Calculate base damage
     if (attack.damage > 0) {
         const effectiveDefense = getEffectiveDefense(targetDefense, targetEffects);
         result.damage = calculateDamage(attack, effectiveDefense);
@@ -225,26 +402,41 @@ export function resolveAttack(
         });
     }
 
-    // Apply effect if present
+    // Evaluate Effect
     if (attack.effect) {
-        const effect = attack.effect;
+        const context: EffectContext = {
+            targetHp,
+            targetMaxHp,
+            targetEffects,
+            selfHp: attackerContext?.hp,
+            selfMaxHp: attackerContext?.maxHp,
+            selfEffects: attackerContext?.effects,
+            turn
+        };
 
-        if (effect.type === 'heal') {
-            result.healAmount = effect.value;
-            log.push({
-                turn,
-                message: `${attackerName} heals for ${effect.value} HP!`,
-                type: 'heal'
-            });
-        } else if (effect.duration) {
-            result.effectApplied = {
-                ...effect,
-                remainingDuration: effect.duration
-            };
-            log.push({
-                turn,
-                message: `${attack.name} applies ${effect.type}!`,
-                type: 'effect'
+        const evalResult = evaluateEffect(attack.effect, context);
+
+        if (evalResult.damage) {
+            result.damage += evalResult.damage;
+            // log extra damage?
+            log.push({ turn, message: `Extra damage from effect: ${evalResult.damage}!`, type: 'attack' });
+        }
+        if (evalResult.heal) {
+            result.healAmount += evalResult.heal;
+            log.push({ turn, message: `${attackerName} heals for ${evalResult.heal}!`, type: 'heal' });
+        }
+        if (evalResult.apChange) {
+            result.apChange += evalResult.apChange;
+            log.push({ turn, message: `AP ${evalResult.apChange > 0 ? 'recovered' : 'drained'} (${Math.abs(evalResult.apChange)})!`, type: 'effect' });
+        }
+        if (evalResult.newEffects.length > 0) {
+            result.effects.push(...evalResult.newEffects);
+            evalResult.newEffects.forEach(e => {
+                log.push({
+                    turn,
+                    message: `${attack.name} applies ${e.type}!`,
+                    type: 'effect'
+                });
             });
         }
     }

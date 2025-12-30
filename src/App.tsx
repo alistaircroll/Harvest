@@ -8,12 +8,16 @@ import { useState, useCallback, useEffect } from 'react';
 import { IntroScreen } from './components/intro/IntroScreen';
 import { Laboratory } from './components/laboratory/Laboratory';
 import { CombatScreen } from './components/combat/CombatScreen';
+import { VictoryScreen } from './components/screens/VictoryScreen';
+import { DefeatScreen } from './components/screens/DefeatScreen';
+import { AbilityTutorialModal } from './components/tutorial/AbilityTutorialModal';
 import { useCreature } from './hooks/useCreature';
-import { createWildCreature } from './data/wildCreatures';
-import type { WildCreature, MVPPartSlot, BodyPart } from './types';
+import { useEncounteredAbilities } from './hooks/useEncounteredAbilities';
+import { createWildCreature } from './data/loaders/creatureLoader';
+import type { WildCreature, MVPPartSlot, BodyPart, Attack } from './types';
 import './components/intro/intro.css';
 
-type GameScreen = 'intro' | 'laboratory' | 'combat';
+type GameScreen = 'intro' | 'laboratory' | 'combat' | 'victory' | 'defeat';
 
 function App() {
   // Use creature hook for state management
@@ -24,16 +28,25 @@ function App() {
     moveToFreezer,
     emptyFreezerSlot,
     resetCreature,
-    harvestPart,
     loseRandomPart,
     healCreature,
+    isDead,
   } = useCreature();
 
   const [screen, setScreen] = useState<GameScreen>('intro');
   const [wildCreature, setWildCreature] = useState<WildCreature | null>(null);
+  const [lootTable, setLootTable] = useState<WildCreature['lootTable'] | null>(null);
+  const [lostPart, setLostPart] = useState<BodyPart | null>(null);
   const [petName, setPetName] = useState<string>('');
   const [showElectricity, setShowElectricity] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+
+  // Tutorial state
+  const [pendingTutorials, setPendingTutorials] = useState<Attack[]>([]);
+  const [tutorialIndex, setTutorialIndex] = useState(0);
+
+  // Encountered abilities tracking
+  const { getNewAbilities, markAbilitiesSeen } = useEncounteredAbilities();
 
   // Handle intro completion
   const handleIntroComplete = useCallback((name: string) => {
@@ -64,8 +77,31 @@ function App() {
     // Create a random wild creature (for now, always rat)
     const wild = createWildCreature('rat', 'city');
     setWildCreature(wild);
-    setScreen('combat');
-  }, []);
+
+    // Check for new special abilities to show tutorials
+    const newAbilities = getNewAbilities(wild);
+    if (newAbilities.length > 0) {
+      setPendingTutorials(newAbilities);
+      setTutorialIndex(0);
+    } else {
+      setScreen('combat');
+    }
+  }, [getNewAbilities]);
+
+  // Handle tutorial dismissal
+  const handleTutorialDismiss = useCallback(() => {
+    if (tutorialIndex < pendingTutorials.length - 1) {
+      // Move to next tutorial
+      setTutorialIndex(prev => prev + 1);
+    } else {
+      // All tutorials shown, mark as seen and start combat
+      const abilityIds = pendingTutorials.map(a => a.id || a.name.toLowerCase().replace(/\s+/g, '_'));
+      markAbilitiesSeen(abilityIds);
+      setPendingTutorials([]);
+      setTutorialIndex(0);
+      setScreen('combat');
+    }
+  }, [tutorialIndex, pendingTutorials, markAbilitiesSeen]);
 
   // Handle swap part from laboratory (drag-drop)
   const handleSwapPart = useCallback((slot: MVPPartSlot, part: BodyPart, freezerIndex: number) => {
@@ -89,39 +125,66 @@ function App() {
     setScreen('intro');
   }, [resetCreature]);
 
-  // Handle victory - harvest parts
+  // Handle victory - show victory screen with loot
   const handleVictory = useCallback((loot: WildCreature['lootTable']) => {
-    console.log('Victory! Loot:', loot);
-    // Harvest a random part from loot (loot is an object with part types as keys)
-    const lootParts = [loot.torso, loot.head, loot.arm, loot.leg, loot.tail];
-    const randomLoot = lootParts[Math.floor(Math.random() * lootParts.length)];
-    harvestPart(randomLoot);
-    // Heal creature
-    healCreature();
-    // Return to lab
-    setScreen('laboratory');
-    setWildCreature(null);
-  }, [harvestPart, healCreature]);
+    setLootTable(loot);
+    setScreen('victory');
+  }, []);
 
-  // Handle defeat - lose a random part
+  // Handle defeat - show defeat screen
   const handleDefeat = useCallback(() => {
-    console.log('Defeat!');
-    const lostPart = loseRandomPart();
-    if (lostPart) {
-      console.log('Lost part:', lostPart);
-    }
-    // Heal creature
+    const lost = loseRandomPart();
+    setLostPart(lost);
+    setScreen('defeat');
+  }, [loseRandomPart]);
+
+  // Handle swapping loot part onto creature (old part discarded)
+  const handleSwapLoot = useCallback((slot: MVPPartSlot, newPart: BodyPart) => {
+    // Old part is permanently discarded per lore
+    swapPart(slot, newPart, 0); // freezerIndex doesn't matter, old part not stored
+  }, [swapPart]);
+
+  // Continue from victory screen
+  const handleContinueFromVictory = useCallback(() => {
     healCreature();
-    // Return to lab
     setScreen('laboratory');
     setWildCreature(null);
-  }, [loseRandomPart, healCreature]);
+    setLootTable(null);
+  }, [healCreature]);
+
+  // Continue from defeat screen
+  const handleContinueFromDefeat = useCallback(() => {
+    // Always return to lab to rebuild, even if dead
+    // Healing happens automatically if not dead, otherwise manual rebuild required
+    if (!isDead) {
+      healCreature();
+    }
+    setScreen('laboratory');
+    setWildCreature(null);
+    setLostPart(null);
+  }, [healCreature, isDead]);
 
   // Handle flee
   const handleFlee = useCallback(() => {
     setScreen('laboratory');
     setWildCreature(null);
   }, []);
+
+  // Render ability tutorial modal (shows before combat starts)
+  if (pendingTutorials.length > 0 && wildCreature) {
+    const currentAbility = pendingTutorials[tutorialIndex];
+    return (
+      <main className="app">
+        <AbilityTutorialModal
+          ability={currentAbility}
+          creatureType={wildCreature.type}
+          onDismiss={handleTutorialDismiss}
+          currentIndex={tutorialIndex}
+          totalCount={pendingTutorials.length}
+        />
+      </main>
+    );
+  }
 
   // Render intro screen
   if (screen === 'intro') {
@@ -142,6 +205,33 @@ function App() {
           onVictory={handleVictory}
           onDefeat={handleDefeat}
           onFlee={handleFlee}
+        />
+      </main>
+    );
+  }
+
+  // Render victory screen
+  if (screen === 'victory' && lootTable) {
+    return (
+      <main className="app">
+        <VictoryScreen
+          lootTable={lootTable}
+          creature={creature}
+          onSwapPart={handleSwapLoot}
+          onContinue={handleContinueFromVictory}
+        />
+      </main>
+    );
+  }
+
+  // Render defeat screen
+  if (screen === 'defeat') {
+    return (
+      <main className="app">
+        <DefeatScreen
+          lostPart={lostPart}
+          creature={creature}
+          onContinue={handleContinueFromDefeat}
         />
       </main>
     );
@@ -174,6 +264,7 @@ function App() {
       <Laboratory
         creature={creature}
         freezer={freezer}
+        isDead={isDead}
         onSwapPart={handleSwapPart}
         onMoveToFreezer={handleMoveToFreezer}
         onEmptySlot={handleEmptySlot}

@@ -7,7 +7,7 @@
  */
 
 import { useState } from 'react';
-import type { BodyPart, Attack, PartType, AnimalType, MVPPartSlot } from '../../types';
+import type { BodyPart, Attack, PartType, AnimalType, MVPPartSlot, DragPayload } from '../../types';
 import { getAnimalDisplayName } from '../../utils/creatures';
 import './creature.css';
 
@@ -77,13 +77,16 @@ export function BodyPartCard({
 
     // Handle drag start for creature-to-freezer drag
     const handleDragStart = (e: React.DragEvent) => {
-        if (!isDraggable || !part || !creatureSlot) return;
-        e.dataTransfer.setData('application/json', JSON.stringify({
+        if (!part || !isDraggable) return;
+
+        // Set drag data for creature->freezer drag
+        const payload: DragPayload = {
             source: 'creature',
             creatureSlot: creatureSlot,
             partType: part.partType,
             part: part,
-        }));
+        };
+        e.dataTransfer.setData('application/json', JSON.stringify(payload));
         e.dataTransfer.effectAllowed = 'move';
     };
 
@@ -129,13 +132,17 @@ export function BodyPartCard({
         if (!onDrop || !slotPartType) return;
 
         try {
-            const data = JSON.parse(e.dataTransfer.getData('application/json'));
-            const droppedPartType = data.partType as PartType;
+            const data = JSON.parse(e.dataTransfer.getData('application/json')) as DragPayload;
 
-            // Check compatibility
+            // Only accept drops from freezer
+            if (data.source !== 'freezer') return;
+
+            const droppedPartType = data.partType;
+
+            // Check compatibility - part type must match slot type
             const isCompatible = droppedPartType === slotPartType;
 
-            if (isCompatible && data.part) {
+            if (isCompatible && data.part && data.freezerIndex !== undefined) {
                 onDrop(data.part as BodyPart, data.freezerIndex);
             }
         } catch {
@@ -145,8 +152,12 @@ export function BodyPartCard({
     // Future/locked slot
     if (isFuture) {
         return (
-            <div className="body-part-card body-part-card--future body-part-card--compact">
+            <div
+                className="body-part-card body-part-card--future body-part-card--compact"
+                title="Locked Slot (Future Update)"
+            >
                 <div className="body-part-card__header">
+                    <span className="body-part-card__locked-icon">🔒</span>
                     {slotType && (
                         <span className="body-part-card__type">{slotType}</span>
                     )}
@@ -155,15 +166,19 @@ export function BodyPartCard({
         );
     }
 
-    // Empty slot
+    // Empty slot - can still accept drops
     if (!part) {
         return (
             <div
-                className={`body-part-card body-part-card--empty ${compact ? 'body-part-card--compact' : ''}`}
+                className={`body-part-card body-part-card--empty ${compact ? 'body-part-card--compact' : ''} ${isDragOver ? 'body-part-card--drag-over' : ''}`}
                 onClick={isInteractive ? onClick : undefined}
+                onDragOver={onDrop ? handleDragOver : undefined}
+                onDragEnter={onDrop ? handleDragEnter : undefined}
+                onDragLeave={onDrop ? handleDragLeave : undefined}
+                onDrop={onDrop ? handleDrop : undefined}
             >
                 <div className="body-part-card__header">
-                    <span className="body-part-card__animal">Empty</span>
+                    <span className="body-part-card__animal">{isDragOver ? 'Drop here' : 'Empty'}</span>
                     {slotType && (
                         <span className="body-part-card__type">{slotType}</span>
                     )}

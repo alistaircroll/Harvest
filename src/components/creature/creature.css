@@ -533,3 +533,21 @@
 .creature-stats__item--attacks .creature-stats__value {
     color: var(--color-cherry-rose);
 }
+
+/* Locked Icon */
+.body-part-card__locked-icon {
+    font-size: 14px;
+    margin-right: 4px;
+    opacity: 0.7;
+}
+
+.body-part-card--future {
+    opacity: 0.6;
+    background: rgba(0, 0, 0, 0.2);
+    border-style: dashed;
+    cursor: not-allowed;
+}
+
+.body-part-card--future:hover {
+    opacity: 0.8;
+}

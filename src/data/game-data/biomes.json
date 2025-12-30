@@ -1,0 +1,190 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "version": "1.0.0",
+    "description": "Biome definitions for exploration. Each biome contains creatures, difficulty settings, and unlock requirements.",
+    "biomes": {
+        "city": {
+            "id": "city",
+            "name": "The City",
+            "description": "Urban streets and alleyways. Home to common critters scrounging for survival.",
+            "icon": "🏙️",
+            "difficulty": 1.0,
+            "unlocked": true,
+            "unlockRequirement": null,
+            "creatures": [
+                "rat",
+                "squirrel",
+                "cat",
+                "dog",
+                "skunk"
+            ],
+            "encounterRules": {
+                "minEncounters": 1,
+                "maxEncounters": 3,
+                "bossChance": 0.0
+            },
+            "exploration": {
+                "steps": 5,
+                "hazardChance": 0.1,
+                "lootBonus": 0
+            },
+            "ambience": {
+                "primaryColor": "#4a4a4a",
+                "accentColor": "#ffa500",
+                "backgroundImage": null
+            }
+        },
+        "woods": {
+            "id": "woods",
+            "name": "The Woods",
+            "description": "Dense forest with towering trees. Creatures here are faster and more elusive.",
+            "icon": "🌲",
+            "difficulty": 1.3,
+            "unlocked": false,
+            "unlockRequirement": {
+                "type": "biome_clear",
+                "biome": "city",
+                "count": 3
+            },
+            "creatures": [
+                "squirrel",
+                "raccoon",
+                "fox",
+                "owl",
+                "deer"
+            ],
+            "encounterRules": {
+                "minEncounters": 1,
+                "maxEncounters": 4,
+                "bossChance": 0.1
+            },
+            "exploration": {
+                "steps": 7,
+                "hazardChance": 0.15,
+                "lootBonus": 0.1
+            },
+            "ambience": {
+                "primaryColor": "#2d5a27",
+                "accentColor": "#8b4513",
+                "backgroundImage": null
+            }
+        },
+        "pond": {
+            "id": "pond",
+            "name": "The Pond",
+            "description": "Murky waters teeming with amphibious life. Watch out for slippery foes.",
+            "icon": "🐸",
+            "difficulty": 1.5,
+            "unlocked": false,
+            "unlockRequirement": {
+                "type": "biome_clear",
+                "biome": "woods",
+                "count": 2
+            },
+            "creatures": [
+                "frog",
+                "duck",
+                "turtle",
+                "fish",
+                "otter"
+            ],
+            "encounterRules": {
+                "minEncounters": 1,
+                "maxEncounters": 3,
+                "bossChance": 0.15
+            },
+            "exploration": {
+                "steps": 6,
+                "hazardChance": 0.2,
+                "lootBonus": 0.15
+            },
+            "ambience": {
+                "primaryColor": "#1e90ff",
+                "accentColor": "#00ced1",
+                "backgroundImage": null
+            }
+        },
+        "beach": {
+            "id": "beach",
+            "name": "The Beach",
+            "description": "Sandy shores where land meets sea. Creatures adapted to both worlds lurk here.",
+            "icon": "🏖️",
+            "difficulty": 1.8,
+            "unlocked": false,
+            "unlockRequirement": {
+                "type": "biome_clear",
+                "biome": "pond",
+                "count": 2
+            },
+            "creatures": [
+                "crab",
+                "seagull",
+                "seal",
+                "pelican",
+                "starfish"
+            ],
+            "encounterRules": {
+                "minEncounters": 2,
+                "maxEncounters": 4,
+                "bossChance": 0.2
+            },
+            "exploration": {
+                "steps": 8,
+                "hazardChance": 0.25,
+                "lootBonus": 0.2
+            },
+            "ambience": {
+                "primaryColor": "#f4a460",
+                "accentColor": "#20b2aa",
+                "backgroundImage": null
+            }
+        },
+        "jungle": {
+            "id": "jungle",
+            "name": "The Jungle",
+            "description": "Dense tropical vegetation hides dangerous predators. Only the strong survive here.",
+            "icon": "🌴",
+            "difficulty": 2.5,
+            "unlocked": false,
+            "unlockRequirement": {
+                "type": "biome_clear",
+                "biome": "beach",
+                "count": 3
+            },
+            "creatures": [
+                "monkey",
+                "parrot",
+                "snake",
+                "jaguar",
+                "toucan"
+            ],
+            "encounterRules": {
+                "minEncounters": 2,
+                "maxEncounters": 5,
+                "bossChance": 0.3
+            },
+            "exploration": {
+                "steps": 10,
+                "hazardChance": 0.3,
+                "lootBonus": 0.35
+            },
+            "ambience": {
+                "primaryColor": "#228b22",
+                "accentColor": "#ff6347",
+                "backgroundImage": null
+            }
+        }
+    },
+    "progressionOrder": [
+        "city",
+        "woods",
+        "pond",
+        "beach",
+        "jungle"
+    ],
+    "difficultyScaling": {
+        "hpMultiplier": 1.0,
+        "defenseMultiplier": 1.0,
+        "damageMultiplier": 1.0
+    }
+}

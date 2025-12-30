@@ -1,0 +1,71 @@
+{
+  "version": "1.0.0",
+  "tuned_at": "2025-12-29T17:55:36Z",
+  "creatures": {
+    "rat": {
+      "original": {
+        "hp": 40,
+        "defense": 0,
+        "ap": 4
+      },
+      "tuned": {
+        "hp": 41,
+        "defense": 0,
+        "ap": 7
+      },
+      "fitness_improvement": 0.30171875
+    },
+    "squirrel": {
+      "original": {
+        "hp": 45,
+        "defense": 1,
+        "ap": 5
+      },
+      "tuned": {
+        "hp": 34,
+        "defense": 0,
+        "ap": 7
+      },
+      "fitness_improvement": 1.074375
+    },
+    "cat": {
+      "original": {
+        "hp": 55,
+        "defense": 1,
+        "ap": 5
+      },
+      "tuned": {
+        "hp": 43,
+        "defense": 0,
+        "ap": 4
+      },
+      "fitness_improvement": 0.5173437500000001
+    },
+    "dog": {
+      "original": {
+        "hp": 65,
+        "defense": 3,
+        "ap": 5
+      },
+      "tuned": {
+        "hp": 91,
+        "defense": 0,
+        "ap": 3
+      },
+      "fitness_improvement": 0.16000000000000003
+    },
+    "skunk": {
+      "original": {
+        "hp": 55,
+        "defense": 3,
+        "ap": 5
+      },
+      "tuned": {
+        "hp": 54,
+        "defense": 1,
+        "ap": 3
+      },
+      "fitness_improvement": 0.15234375
+    }
+  }
+}
